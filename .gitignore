@@ -1,0 +1,19 @@
+# Environment variables
+.env
+
+# SQLite database
+data/*.sqlite
+data/*.db
+storage/*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# System
+.DS_Store
+.gemini/

@@ -1,0 +1,8 @@
+aiohttp
+websockets
+pandas
+numpy
+python-dotenv
+pyyaml
+py-clob-client
+rich
