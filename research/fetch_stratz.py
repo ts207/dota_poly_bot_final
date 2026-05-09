@@ -33,11 +33,11 @@ def init_db(db_path):
     conn.commit()
     return conn
 
-def fetch_stratz_matches(take=100, skip=0, account_id=1596698187):
+def fetch_stratz_matches(take=10, skip=0):
     query = """
-    query GetMatches($accountId: Long!, $take: Int!, $skip: Int!) {
-      player(steamAccountId: $accountId) {
-        matches(request: { take: $take, skip: $skip, isParsed: true }) {
+    query GetProMatches($take: Int!, $skip: Int!) {
+      leagues(request: { take: $take, skip: $skip }) {
+        matches(request: { take: 10, skip: 0, isParsed: true }) {
           id
           didRadiantWin
           players {
@@ -57,7 +57,6 @@ def fetch_stratz_matches(take=100, skip=0, account_id=1596698187):
     """
     
     variables = {
-        "accountId": account_id,
         "take": take,
         "skip": skip
     }
@@ -68,7 +67,7 @@ def fetch_stratz_matches(take=100, skip=0, account_id=1596698187):
         "Content-Type": "application/json"
     }
     
-    print(f"Fetching {take} matches from Stratz (skip={skip})...")
+    print(f"Fetching {take} leagues from Stratz (skip={skip})...")
     response = requests.post(STRATZ_API_URL, json={"query": query, "variables": variables}, headers=headers)
     
     if response.status_code != 200:
@@ -80,7 +79,14 @@ def fetch_stratz_matches(take=100, skip=0, account_id=1596698187):
         print(f"GraphQL Errors: {data['errors']}")
         return []
         
-    return data.get('data', {}).get('player', {}).get('matches', [])
+    # Flatten matches from all returned leagues
+    leagues = data.get('data', {}).get('leagues', [])
+    all_matches = []
+    for league in leagues:
+        if 'matches' in league and league['matches']:
+            all_matches.extend(league['matches'])
+            
+    return all_matches
 
 def process_match(match, conn):
     match_id = match.get('id')
@@ -106,7 +112,8 @@ def process_match(match, conn):
     
     for p in players:
         is_radiant = p.get('isRadiant')
-        kills = p.get('playbackData', {}).get('killEvents', []) or []
+        pb_data = p.get('playbackData') or {}
+        kills = pb_data.get('killEvents') or []
         for k in kills:
             if k and 'time' in k:
                 if is_radiant:
@@ -171,8 +178,9 @@ def main():
     skip = 0
     
     while processed < args.limit:
-        batch_size = min(10, args.limit - processed)
-        matches = fetch_stratz_matches(take=batch_size, skip=skip)
+        # We need to fetch leagues. We will just fetch 1 league at a time.
+        # Each league has up to 10 matches, so we might fetch up to 10 matches per batch.
+        matches = fetch_stratz_matches(take=1, skip=skip)
         
         if not matches:
             print("No more matches to process or API failed.")
@@ -181,6 +189,8 @@ def main():
         print(f"Fetched {len(matches)} matches in this batch.")
         
         for m in matches:
+            if processed >= args.limit:
+                break
             match_id = m.get('id')
             
             # Check if already processed
@@ -188,12 +198,12 @@ def main():
             cursor.execute("SELECT count(*) FROM stratz_history WHERE match_id = ?", (match_id,))
             if cursor.fetchone()[0] > 0:
                 print(f"Match {match_id} already in DB. Skipping.")
-                skip += 1
                 continue
                 
             if process_match(m, conn):
                 processed += 1
-            skip += 1
+                
+        skip += 1 # skip 1 league next time
             
     conn.close()
     print(f"Finished processing {processed} new matches.")

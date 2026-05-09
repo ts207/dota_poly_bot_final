@@ -3,35 +3,23 @@ import pandas as pd
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
-from onnxconverter_common.data_types import FloatTensorType
-from skl2onnx import convert_sklearn
+from sklearn.metrics import log_loss, roc_auc_score
+from onnxmltools.convert.common.data_types import FloatTensorType
 import joblib
+from onnxmltools import convert_xgboost
 
 def extract_features(db_path):
     conn = sqlite3.connect(db_path)
     
-    # We will join dota_ticks and market_ticks (COMBINED_RADIANT) based on closest time
     query = """
     SELECT 
-        d.ts_ms,
-        d.match_key,
-        d.game_time,
-        d.nw_diff,
-        d.nw_diff_pct,
-        d.radiant_score - d.dire_score AS score_diff,
-        m.mid,
-        m.spread
-    FROM dota_ticks d
-    JOIN market_ticks m ON m.ts_ms = (
-        SELECT ts_ms FROM market_ticks 
-        WHERE token_id = 'COMBINED_RADIANT' 
-          AND ts_ms >= d.ts_ms - 2000 
-          AND ts_ms <= d.ts_ms + 2000
-        ORDER BY ABS(ts_ms - d.ts_ms)
-        LIMIT 1
-    )
-    WHERE m.token_id = 'COMBINED_RADIANT'
-    ORDER BY d.ts_ms
+        match_id,
+        game_time,
+        nw_diff,
+        score_diff,
+        radiant_win
+    FROM stratz_history
+    ORDER BY match_id, game_time
     """
     
     print("Extracting data from DB...")
@@ -40,35 +28,22 @@ def extract_features(db_path):
     
     if df.empty:
         print("No data found!")
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.Series(), []
         
     print(f"Extracted {len(df)} rows.")
     
     # Calculate rolling features
-    df = df.sort_values(by=['match_key', 'ts_ms'])
-    
-    # 60s ago
-    df['ts_60s_ago'] = df['ts_ms'] - 60000
-    
-    # Very crude approximation of 60s change using shift for demo purposes, 
-    # a rigorous pipeline would use exact timestamp matching or rolling windows.
-    # We will compute changes using simple diffs for the MVP pipeline.
-    df['nw_change_60s'] = df.groupby('match_key')['nw_diff'].diff(periods=60).fillna(0)
-    df['score_change_60s'] = df.groupby('match_key')['score_diff'].diff(periods=60).fillna(0)
-    df['market_change_60s'] = df.groupby('match_key')['mid'].diff(periods=60).fillna(0)
-    
-    # Target: the final 'mid' price in the match, assuming it resolves to 1 or 0
-    # or the 'mid' price 120s in the future as a proxy for "expected move".
-    # Let's predict mid price 120s in the future.
-    df['target_mid'] = df.groupby('match_key')['mid'].shift(-120)
+    # Since Stratz data is exactly 1 minute apart (game_time = 0, 60, 120...)
+    # 60s change is just diff(1)
+    df['nw_change_60s'] = df.groupby('match_id')['nw_diff'].diff(1).fillna(0)
+    df['score_change_60s'] = df.groupby('match_id')['score_diff'].diff(1).fillna(0)
     
     df = df.dropna()
     
-    features = ['game_time', 'nw_diff', 'nw_diff_pct', 'score_diff', 'mid', 'spread', 
-                'nw_change_60s', 'score_change_60s', 'market_change_60s']
+    features = ['game_time', 'nw_diff', 'score_diff', 'nw_change_60s', 'score_change_60s']
     
     X = df[features]
-    y = df['target_mid']
+    y = df['radiant_win']
     
     return X, y, features
 
@@ -78,19 +53,19 @@ def train_and_export():
     
     if X.empty:
         print("Dataset is empty. Cannot train. Generating dummy model.")
-        # Create dummy data so we can at least serialize a model
-        X = pd.DataFrame(np.random.rand(100, 9), columns=['game_time', 'nw_diff', 'nw_diff_pct', 'score_diff', 'mid', 'spread', 'nw_change_60s', 'score_change_60s', 'market_change_60s'])
-        y = np.random.rand(100)
+        X = pd.DataFrame(np.random.rand(100, 5), columns=['game_time', 'nw_diff', 'score_diff', 'nw_change_60s', 'score_change_60s'])
+        y = np.random.randint(0, 2, 100)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    print("Training XGBoost model...")
-    # We use XGBRegressor wrapped in scikit-learn API to make ONNX export easier
-    model = xgb.XGBRegressor(n_estimators=100, max_depth=4, learning_rate=0.1, objective='reg:squarederror')
-    model.fit(X_train, y_train)
+    print("Training XGBoost Classifier...")
+    model = xgb.XGBClassifier(n_estimators=100, max_depth=4, learning_rate=0.1, objective='binary:logistic')
+    model.fit(X_train.values, y_train)
     
-    score = model.score(X_test, y_test)
-    print(f"Model R^2 score: {score:.4f}")
+    preds = model.predict_proba(X_test.values)[:, 1]
+    auc = roc_auc_score(y_test, preds)
+    loss = log_loss(y_test, preds)
+    print(f"Model AUC: {auc:.4f} | Log Loss: {loss:.4f}")
     
     # Save standard joblib model
     model_path_joblib = 'dota_xgboost.joblib'
@@ -99,8 +74,14 @@ def train_and_export():
     
     # Convert to ONNX
     print("Converting to ONNX format...")
+    # For XGBClassifier, the output is probability, but onnx conversion needs to know it's a float input
     initial_type = [('float_input', FloatTensorType([None, X.shape[1]]))]
-    onnx_model = convert_sklearn(model, initial_types=initial_type)
+    
+    onnx_model = convert_xgboost(
+        model, 
+        initial_types=initial_type,
+        target_opset=12
+    )
     
     model_path_onnx = 'dota_xgboost.onnx'
     with open(model_path_onnx, "wb") as f:

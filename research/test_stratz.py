@@ -8,12 +8,15 @@ token = os.getenv("STRATZ_API_KEY")
 
 query = """
 {
-  player(steamAccountId: 1596698187) {
-    matches(request: { take: 1, isParsed: true }) {
+  leagues(request: { take: 1, skip: 0 }) {
+    matches(request: { take: 10, skip: 0 }) {
       id
       didRadiantWin
       players {
         isRadiant
+        stats {
+          networthPerMinute
+        }
         playbackData {
           killEvents {
             time
