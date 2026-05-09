@@ -30,7 +30,8 @@ class SignalEngine:
             "STRUCTURAL_SWING": 0.075,
             "VISIBLE_FIGHT_UNDERREACTION": 0.10,
             "LEAD_FLIP": 0.10,
-            "HIDDEN_ECONOMIC_SWING": 0.10
+            "HIDDEN_ECONOMIC_SWING": 0.10,
+            "OVERREACTION_FADE": 0.10
         }
 
         self.lead_60s_weight = _env_float("SIGNAL_LEAD_60S_WEIGHT", 0.000012)
@@ -76,9 +77,13 @@ class SignalEngine:
         lead_60 = abs(float(f.get("nw_change_60s", 0.0)))
         bldg_change = int(f.get("building_change_60s", 0))
         game_min = float(f.get("game_time", 0.0)) / 60.0
+        
+        # Market Overreaction: Price moved significantly but map is quiet.
+        market_move_60 = float(f.get("market_change_60s", 0.0))
+        if abs(market_move_60) >= 0.05 and score_60 == 0 and lead_60 < 1000:
+            return "OVERREACTION_FADE"
 
         # Scale threshold: 2500 at 20 mins, increases as game goes on.
-        # This prevents late-game "normal" farm from being flagged as a massive swing.
         base_thresh = 2000 + (max(0, game_min - 15) * 100)
 
         old_lead_est = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))

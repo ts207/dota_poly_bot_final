@@ -6,3 +6,7 @@ python-dotenv
 pyyaml
 py-clob-client
 rich
+xgboost
+scikit-learn
+onnxruntime
+skl2onnx

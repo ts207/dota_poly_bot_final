@@ -58,19 +58,50 @@ class RiskEngine:
 
         return True, "OK"
 
-    def order_size(self, edge: float, remaining_capacity: float = None) -> float:
+    def order_size(self, signal: Dict[str, Any], target_book: Dict[str, Any], remaining_capacity: float = None) -> float:
         """
-        Determines order size based on conviction (edge).
-        - Edge >= 10%: 1.0x baseline
-        - Edge < 10%: No trade (for STALE_PRICE/STRUCTURAL we keep 0.5x logic)
-        - Removed 1.5x multiplier to avoid terminal fight traps.
+        Determines order size based on Signal Type, Edge, and Market Health.
+        
+        Rules:
+        - STALE_PRICE: 5-15% Small, 15%+ Small (if book healthy)
+        - STRUCTURAL: 7.5-15% Normal, 15%+ Normal (if liquidity excellent)
+        - FIGHT: 10-15% Normal, 15%+ Block if late or book stale
         """
-        if edge >= 0.10:
-            multiplier = 1.0
-        elif edge >= 0.05:
-            multiplier = 0.5
-        else:
-            multiplier = 0.0
+        edge = float(signal.get("edge", 0.0))
+        sig_type = signal.get("signal_type", "STALE_PRICE")
+        
+        # Calculate Market Health Score (0.0 to 1.0)
+        # Based on: Freshness, Bid Presence, and Depth relative to standard order size.
+        bid_depth = float(target_book.get("bid_depth", 0.0))
+        health = 1.0
+        if bid_depth < 50: health *= 0.5
+        if float(target_book.get("spread", 1.0)) > 0.02: health *= 0.8
+        
+        multiplier = 0.0
+        
+        if sig_type == "STALE_PRICE":
+            if 0.05 <= edge < 0.15:
+                multiplier = 0.5 * health
+            elif edge >= 0.15:
+                multiplier = 0.5 # Capped for safety
+                
+        elif sig_type == "STRUCTURAL_SWING":
+            if 0.075 <= edge < 0.15:
+                multiplier = 1.0 * health
+            elif edge >= 0.15:
+                # Excellent liquidity required for large structural bets
+                multiplier = 1.0 if bid_depth >= 100 else 0.5
+                
+        elif sig_type == "VISIBLE_FIGHT_UNDERREACTION":
+            if 0.10 <= edge < 0.15:
+                multiplier = 0.5 * health
+            elif edge >= 0.15:
+                # Often a trap at endgame (Terminal Fight Guard)
+                multiplier = 0.0
+                
+        else: # LEAD_FLIP, HIDDEN_ECONOMIC, OVERREACTION_FADE
+            if edge >= 0.10:
+                multiplier = 0.5 * health
 
         size = self.max_order_size * multiplier
 

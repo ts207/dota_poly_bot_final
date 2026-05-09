@@ -117,9 +117,9 @@ async def strategy_loop(
                     logger.info(f"Risk blocked trade: {reason}")
                 else:
                     remaining_capacity = max(0.0, risk.max_position_per_match - current_exposure)
-                    size = risk.order_size(signal["edge"], remaining_capacity=remaining_capacity)
+                    size = risk.order_size(signal, target_book, remaining_capacity=remaining_capacity)
                     if size <= 0:
-                        logger.info("Risk blocked trade: ZERO_SIZE")
+                        logger.info("Risk blocked trade: ZERO_SIZE_OR_HEALTH_GATE")
                     else:
                         price = min(float(target_book["best_ask"]) + float(os.getenv("ORDER_PRICE_IMPROVE", "0.01")), 0.99)
                         logger.signal(
