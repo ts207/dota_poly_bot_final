@@ -57,11 +57,15 @@ class FeatureEngine:
     def compute(self, dota_now: Dict[str, Any], market_now: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         now_ms = dota_now["ts_ms"]
 
+        d2 = self.dota.closest_ago(now_ms, 2, tolerance_seconds=1)
+        d5 = self.dota.closest_ago(now_ms, 5, tolerance_seconds=1)
         d10 = self.dota.closest_ago(now_ms, 10)
         d30 = self.dota.closest_ago(now_ms, 30)
         d60 = self.dota.closest_ago(now_ms, 60)
         d180 = self.dota.closest_ago(now_ms, 180)
 
+        m2 = self.market.closest_ago(market_now["ts_ms"], 2, tolerance_seconds=1)
+        m5 = self.market.closest_ago(market_now["ts_ms"], 5, tolerance_seconds=1)
         m10 = self.market.closest_ago(market_now["ts_ms"], 10)
         m30 = self.market.closest_ago(market_now["ts_ms"], 30)
         m60 = self.market.closest_ago(market_now["ts_ms"], 60)
@@ -75,6 +79,7 @@ class FeatureEngine:
         bldg_now = int(dota_now.get("building_state", 0))
 
         f = {
+            "match_key": dota_now.get("match_key", ""),
             "game_time": float(dota_now.get("game_time", 0.0)),
             "nw_diff": nw_now,
             "nw_diff_pct": float(dota_now.get("nw_diff_pct", 0.0)),
@@ -101,7 +106,7 @@ class FeatureEngine:
             "dire_bid_depth": float(market_now.get("dire_bid_depth", 0.0)),
         }
 
-        for sec, d_old in ((10, d10), (30, d30), (60, d60), (180, d180)):
+        for sec, d_old in ((2, d2), (5, d5), (10, d10), (30, d30), (60, d60), (180, d180)):
             if d_old:
                 f[f"nw_change_{sec}s"] = nw_now - float(d_old.get("nw_diff", 0.0))
                 f[f"nw_change_{sec}s_pct"] = float(dota_now.get("nw_diff_pct", 0.0)) - float(d_old.get("nw_diff_pct", 0.0))
@@ -115,7 +120,7 @@ class FeatureEngine:
                 f[f"score_change_{sec}s"] = 0
                 f[f"building_change_{sec}s"] = 0
 
-        for sec, m_old in ((10, m10), (30, m30), (60, m60)):
+        for sec, m_old in ((2, m2), (5, m5), (10, m10), (30, m30), (60, m60)):
             f[f"market_change_{sec}s"] = mid_now - float(m_old.get("mid", mid_now)) if m_old else 0.0
 
         return f

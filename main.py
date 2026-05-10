@@ -123,8 +123,11 @@ async def strategy_loop(
                     else:
                         price = min(float(target_book["best_ask"]) + float(os.getenv("ORDER_PRICE_IMPROVE", "0.01")), 0.99)
                         logger.signal(
-                            f"{signal['side']} | Edge={signal['edge']:.4f} "
-                            f"| Exp={signal['expected_move']:.4f} | Lag={signal['market_lag']:.4f}"
+                            f"{signal['side']} | Trigger={signal.get('trigger')} "
+                            f"| Edge={signal['edge']:.4f} "
+                            f"| Fair={signal.get('fair_price', 0):.4f} "
+                            f"| Entry={signal.get('entry_price_target', 0):.4f} "
+                            f"| Exp={signal['expected_move']:.4f}"
                         )
                         signal_id = db.log_signal(signal, f, dota_tick["match_key"], market_id, target_token_id=target_token_id)
                         result = await orders.buy_limit(target_token_id, price, size, signal, signal_id=signal_id)

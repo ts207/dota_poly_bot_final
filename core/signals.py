@@ -75,6 +75,7 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
     Trigger.STRUCTURAL_SWING: 0.06,
     Trigger.OVERREACTION:     0.05,
     "ML_PREDICTION":          0.04,
+    "DOTA_SPIKE_LATENCY":     0.03,
 }
 
 # Max edge ceiling per trigger (Draft-Trap guard).
@@ -104,8 +105,8 @@ class SignalEngine:
         self.score_30s_weight = _env_float("SIGNAL_SCORE_30S_WEIGHT", 0.005)
         self.max_expected_move = _env_float("SIGNAL_MAX_EXPECTED_MOVE", 0.25)
 
-        # Dedup state: match_key → last fired game_minute
-        self._last_signal_minute: Dict[str, int] = {}
+        # Dedup state: match_key → (game_minute, last_fair_price)
+        self._last_signal_state: Dict[str, tuple] = {}
 
         # Load ONNX model
         model_path = os.path.join(os.path.dirname(__file__), "../research/dota_xgboost.onnx")
@@ -144,6 +145,17 @@ class SignalEngine:
         # Dynamic NW threshold: 2,000 at 15 min, +100/min thereafter
         nw_thresh = 2000 + max(0.0, game_min - 15) * 100
 
+        # ── Latency Spike Detection (True Edge) ──
+        score_2s = abs(float(f.get("score_change_2s", 0.0)))
+        nw_2s = abs(float(f.get("nw_change_2s", 0.0)))
+        market_5s = abs(float(f.get("market_change_5s", 0.0)))
+
+        # DOTA SPIKE: kill or NW jump in last 2s, market hasn't moved in last 5s
+        if (score_2s >= 1 or nw_2s > 500) and market_5s < 0.01:
+            return "DOTA_SPIKE_LATENCY"
+
+        # ── Traditional Taxonomy ──
+        # Overreaction: price moved but map is quiet
         if market_60 >= 0.05 and score_60 == 0 and nw_60 < 1000:
             return Trigger.OVERREACTION
         
@@ -193,7 +205,7 @@ class SignalEngine:
         return raw * (1.0 - mid) * 2.0 if raw > 0 else raw * mid * 2.0
 
     def reset_match(self, match_key: str) -> None:
-        self._last_signal_minute.pop(match_key, None)
+        self._last_signal_state.pop(match_key, None)
 
     def generate(self, f: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         # ── 1. Quality ──
@@ -204,7 +216,10 @@ class SignalEngine:
         # ── 2. Dedup ──
         match_key = str(f.get("match_key", ""))
         game_minute = int(float(f.get("game_time", 0.0)) // 60)
-        if self._last_signal_minute.get(match_key) == game_minute: return None
+        
+        last_min, last_fair = self._last_signal_state.get(match_key, (-1, 0.0))
+        # Hard lockout removed; replaced with 'Momentum Change' gate below.
+        # if last_min == game_minute: return None
 
         # ── 3. Trigger ──
         trigger = self.classify(f)
@@ -234,8 +249,14 @@ class SignalEngine:
         if not (self.min_edge <= edge <= MAX_EDGE):
             return None
 
+        # Intra-minute Momentum Check:
+        # If we already fired in this minute, only fire again if fair price moved > 3%
+        if last_min == game_minute:
+            if abs(fair - last_fair) < 0.03:
+                return None
+
         # ── 5. Emit ──
-        self._last_signal_minute[match_key] = game_minute
+        self._last_signal_state[match_key] = (game_minute, fair)
         return {
             "side": "BUY_RADIANT_YES" if expected > 0 else "BUY_DIRE_YES",
             "trigger": trigger,

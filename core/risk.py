@@ -77,31 +77,19 @@ class RiskEngine:
         if bid_depth < 50: health *= 0.5
         if float(target_book.get("spread", 1.0)) > 0.02: health *= 0.8
         
-        multiplier = 0.0
+        # V3 Trigger Taxonomy sizing
+        trigger = signal.get("trigger", signal.get("signal_type", "SLOW_BLEED"))
         
-        if sig_type == "STALE_PRICE":
-            if 0.05 <= edge < 0.15:
-                multiplier = 0.5 * health
-            elif edge >= 0.15:
-                multiplier = 0.5 # Capped for safety
-                
-        elif sig_type == "STRUCTURAL_SWING":
-            if 0.075 <= edge < 0.15:
-                multiplier = 1.0 * health
-            elif edge >= 0.15:
-                # Excellent liquidity required for large structural bets
-                multiplier = 1.0 if bid_depth >= 100 else 0.5
-                
-        elif sig_type == "VISIBLE_FIGHT_UNDERREACTION":
-            if 0.10 <= edge < 0.15:
-                multiplier = 0.5 * health
-            elif edge >= 0.15:
-                # Often a trap at endgame (Terminal Fight Guard)
-                multiplier = 0.0
-                
-        else: # LEAD_FLIP, HIDDEN_ECONOMIC, OVERREACTION_FADE
-            if edge >= 0.10:
-                multiplier = 0.5 * health
+        if trigger in {"FIGHT", "SLOW_BLEED", "KILL_EVENT", "DOTA_SPIKE_LATENCY"}:
+            multiplier = 0.5 * health
+        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING"}:
+            multiplier = 1.0 * health
+        elif trigger == "OVERREACTION":
+            multiplier = 0.5 * health
+        elif trigger == "ML_PREDICTION":
+            multiplier = 0.5 * health
+        else:
+            multiplier = 0.25 * health
 
         size = self.max_order_size * multiplier
 
