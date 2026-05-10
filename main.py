@@ -99,6 +99,10 @@ async def strategy_loop(
                 await asyncio.sleep(1.0)
                 continue
 
+            # Inject token IDs for auditing
+            f["radiant_token_id"] = radiant_token_id
+            f["dire_token_id"] = dire_token_id
+
             if int(time.time()) % 5 == 0:
                 print(
                     f"Strategy: Active | Time={int(dota_tick['game_time']//60)}m "

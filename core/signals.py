@@ -127,12 +127,12 @@ class SignalEngine:
             os.makedirs("data", exist_ok=True)
             with open(self.shadow_log_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["ts", "game_time", "trigger", "side", "mid", "fair", "edge", "action"])
+                writer.writerow(["ts", "game_time", "trigger", "side", "token_id", "nw_diff", "mid", "fair", "edge", "action"])
 
-    def _log_shadow(self, game_time, trigger, side, mid, fair, edge, action):
+    def _log_shadow(self, game_time, trigger, side, token_id, nw_diff, mid, fair, edge, action):
         with open(self.shadow_log_path, "a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([time.time(), game_time, trigger, side, mid, fair, edge, action])
+            writer.writerow([time.time(), game_time, trigger, side, token_id, nw_diff, mid, fair, edge, action])
 
     def classify(self, f: Dict[str, Any]) -> str:
         """Label this game-state snapshot with a trigger type."""
@@ -250,10 +250,21 @@ class SignalEngine:
         fair = min(0.99, max(0.01, mid + expected if expected > 0 else (1.0 - mid) + abs(expected)))
         edge = fair - entry
         
-        # Log for debugging
-        edge_floor = TRIGGER_EDGE_FLOORS.get(trigger, self.min_edge)
-        self._log_shadow(f.get("game_time"), trigger, side, mid, fair, edge, 
-                         "FIRE" if edge_floor <= edge <= MAX_EDGE else "REJECT_EDGE")
+        # ── 5. Log Shadow (Reduced Noise) ──
+        # Only log if this is a new minute/trigger/side for this match
+        shadow_key = (match_key, game_minute, trigger, side)
+        if not hasattr(self, "_last_shadow_keys"):
+            self._last_shadow_keys = set()
+        
+        if shadow_key not in self._last_shadow_keys:
+            edge_floor = TRIGGER_EDGE_FLOORS.get(trigger, self.min_edge)
+            token_id = f.get("radiant_token_id" if expected > 0 else "dire_token_id", "0x")
+            self._log_shadow(f.get("game_time"), trigger, side, token_id, f.get("nw_diff", 0.0), 
+                             mid, fair, edge, "FIRE" if edge_floor <= edge <= MAX_EDGE else "REJECT_EDGE")
+            self._last_shadow_keys.add(shadow_key)
+            # Cleanup old keys to prevent memory leak
+            if len(self._last_shadow_keys) > 1000:
+                self._last_shadow_keys.clear()
 
         if not (edge_floor <= edge <= MAX_EDGE):
             return None
