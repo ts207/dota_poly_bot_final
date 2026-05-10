@@ -150,7 +150,8 @@ async def strategy_loop(
                             f"| Edge={signal['edge']:.4f} "
                             f"| Fair={fair:.4f} "
                             f"| Price={price:.4f} "
-                            f"| Exp={signal['expected_move']:.4f}"
+                            f"| Exp={signal['expected_move']:.4f} "
+                            f"| Snowball={signal.get('is_snowball_regime')}"
                         )
                         signal_id = db.log_signal(signal, f, dota_tick["match_key"], market_id, target_token_id=target_token_id)
                         result = await orders.buy_limit(target_token_id, price, size, signal, signal_id=signal_id)
