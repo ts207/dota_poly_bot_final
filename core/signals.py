@@ -234,19 +234,28 @@ class SignalEngine:
             expected = self._heuristic_expected_move(f)
             signal_type = trigger
 
+        # Latency Bump: If it's a DOTA_SPIKE_LATENCY, the ML model (which uses 60s features)
+        # is likely underestimating the move. We add a heuristic bump.
+        if trigger == "DOTA_SPIKE_LATENCY":
+            bump = 0.03 if expected > 0 else -0.03
+            expected += bump
+
         if abs(expected) < self.min_expected_move: return None
 
-        # Executable edge calculation
+        # Executable edge calculation (factoring in ORDER_PRICE_IMPROVE)
+        improve = _env_float("ORDER_PRICE_IMPROVE", 0.01)
         side = "RADIANT" if expected > 0 else "DIRE"
-        entry = float(f.get("radiant_best_ask" if expected > 0 else "dire_best_ask", 1.0))
+        raw_entry = float(f.get("radiant_best_ask" if expected > 0 else "dire_best_ask", 1.0))
+        entry = min(raw_entry + improve, 0.99)
         fair = min(0.99, max(0.01, mid + expected if expected > 0 else (1.0 - mid) + abs(expected)))
         edge = fair - entry
         
         # Log for debugging
+        edge_floor = TRIGGER_EDGE_FLOORS.get(trigger, self.min_edge)
         self._log_shadow(f.get("game_time"), trigger, side, mid, fair, edge, 
-                         "FIRE" if self.min_edge <= edge <= MAX_EDGE else "REJECT_EDGE")
+                         "FIRE" if edge_floor <= edge <= MAX_EDGE else "REJECT_EDGE")
 
-        if not (self.min_edge <= edge <= MAX_EDGE):
+        if not (edge_floor <= edge <= MAX_EDGE):
             return None
 
         # Intra-minute Momentum Check:

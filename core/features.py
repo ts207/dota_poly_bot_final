@@ -70,7 +70,7 @@ class FeatureEngine:
         m30 = self.market.closest_ago(market_now["ts_ms"], 30)
         m60 = self.market.closest_ago(market_now["ts_ms"], 60)
 
-        if not d60 or not m60:
+        if not d10 or not m10:
             return None
 
         nw_now = float(dota_now.get("nw_diff", 0.0))
