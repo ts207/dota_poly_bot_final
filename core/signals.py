@@ -178,7 +178,7 @@ class SignalEngine:
                 return "L_STRONG_GAP"
             # Fallbacks
             if score_10s >= 2: return "L_FIGHT_GAP"
-            if nw_10s >= 2000: return "L_ECON_GAP"
+            # ECON DISABLED (TOXIC)
             if bldg == 1: return "L_STRUCTURAL_GAP"
             
             # L_LEAD_FLIP_GAP
@@ -201,8 +201,7 @@ class SignalEngine:
             return Trigger.STRUCTURAL_SWING
         if nw_60 >= nw_thresh and score_60 >= 2:
             return Trigger.FIGHT
-        if nw_60 >= nw_thresh and score_60 < 2:
-            return Trigger.ECONOMIC_SWING
+        # ECON IS DISABLED (TOXIC)
         if score_60 >= 2:
             return Trigger.KILL_EVENT
 

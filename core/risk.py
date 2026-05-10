@@ -80,12 +80,16 @@ class RiskEngine:
         # V3 Trigger Taxonomy sizing
         trigger = signal.get("trigger", signal.get("signal_type", "SLOW_BLEED"))
         
-        if trigger in {"FIGHT", "SLOW_BLEED", "KILL_EVENT", "L_ECON_GAP", "L_STRUCTURAL_GAP"}:
-            multiplier = 0.5 * health
-        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP", "L_STRONG_GAP", "M_STRONG_CONFIRM"}:
+        if trigger == "M_STRONG_CONFIRM":
             multiplier = 1.0 * health
+        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP", "FIGHT"}:
+            multiplier = 0.5 * health
+        elif trigger in {"L_STRONG_GAP", "SLOW_BLEED", "KILL_EVENT"}:
+            multiplier = 0.2 * health # Tiny size for carry/bleed
         elif trigger == "OVERREACTION":
             multiplier = 0.5 * health
+        else:
+            multiplier = 0.1 * health # Default safety
         elif trigger == "ML_PREDICTION":
             multiplier = 0.5 * health
         else:
