@@ -251,13 +251,14 @@ class SignalEngine:
         edge = fair - entry
         
         # ── 5. Log Shadow (Reduced Noise) ──
+        edge_floor = TRIGGER_EDGE_FLOORS.get(trigger, self.min_edge)
+        
         # Only log if this is a new minute/trigger/side for this match
         shadow_key = (match_key, game_minute, trigger, side)
         if not hasattr(self, "_last_shadow_keys"):
             self._last_shadow_keys = set()
         
         if shadow_key not in self._last_shadow_keys:
-            edge_floor = TRIGGER_EDGE_FLOORS.get(trigger, self.min_edge)
             token_id = f.get("radiant_token_id" if expected > 0 else "dire_token_id", "0x")
             self._log_shadow(f.get("game_time"), trigger, side, token_id, f.get("nw_diff", 0.0), 
                              mid, fair, edge, "FIRE" if edge_floor <= edge <= MAX_EDGE else "REJECT_EDGE")

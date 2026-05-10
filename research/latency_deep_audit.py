@@ -5,8 +5,9 @@ import os
 from datetime import datetime
 
 # Config
-SHADOW_LOG = "/home/irene/dota_poly_bot_final/data/shadow_signals.csv"
-DB_PATH = "/home/irene/dota_poly_bot_final/data/dota_poly_collection.sqlite"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SHADOW_LOG = os.path.join(BASE_DIR, "data/shadow_signals.csv")
+DB_PATH = os.path.join(BASE_DIR, "data/dota_poly_collection.sqlite")
 
 def get_lead_bucket(nw_diff):
     abs_nw = abs(nw_diff)
@@ -99,7 +100,7 @@ def analyze_latency_deep():
         'mfe': 'mean'
     })
     
-    print("\n=== LATENCY DEEP AUDIT (EXECUTABLE PN) ===")
+    print("\n=== LATENCY DEEP AUDIT (EXECUTABLE PNL) ===")
     print(summary)
 
 if __name__ == "__main__":
