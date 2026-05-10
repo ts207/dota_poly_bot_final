@@ -2,7 +2,9 @@ import sqlite3
 import pandas as pd
 import os
 
-DB_PATH = "/home/irene/dota_poly_bot_final/data/dota_poly_collection.sqlite"
+# Config
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "data/dota_poly_collection.sqlite")
 
 def get_high_conviction_trigger(row):
     # Re-bucket based on stricter rules

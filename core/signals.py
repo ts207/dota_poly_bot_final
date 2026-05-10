@@ -75,6 +75,7 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
     Trigger.STRUCTURAL_SWING: 0.06,
     Trigger.OVERREACTION:     0.05,
     "ML_PREDICTION":          0.04,
+    "L_STRONG_GAP":           0.03,
     "L_FIGHT_GAP":            0.04,
     "L_ECON_GAP":             0.03,
     "L_STRUCTURAL_GAP":       0.03,
@@ -157,6 +158,9 @@ class SignalEngine:
         is_market_flat = market_10s < 0.01
 
         if is_market_flat:
+            # L_STRONG: 2+ kills AND 2k+ NW swing in 5s (Golden Bucket)
+            if score_5s >= 2 and nw_5s >= 2000:
+                return "L_STRONG_GAP"
             # L_FIGHT: 2+ kills in 5s
             if score_5s >= 2:
                 return "L_FIGHT_GAP"

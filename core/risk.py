@@ -82,7 +82,7 @@ class RiskEngine:
         
         if trigger in {"FIGHT", "SLOW_BLEED", "KILL_EVENT", "L_ECON_GAP", "L_STRUCTURAL_GAP"}:
             multiplier = 0.5 * health
-        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP"}:
+        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP", "L_STRONG_GAP"}:
             multiplier = 1.0 * health
         elif trigger == "OVERREACTION":
             multiplier = 0.5 * health
