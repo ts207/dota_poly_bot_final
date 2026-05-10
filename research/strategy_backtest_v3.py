@@ -60,9 +60,23 @@ def main():
         snap = snap.iloc[0]
         # Entry Price Simulation
         if profile == "M_STRONG_CONFIRM":
-            entry = float(snap.best_ask) # Taker
+            # Taker with 1 cent overhead
+            entry = min(float(snap.best_ask) + 0.01, 0.99)
+            filled = True
         else:
-            entry = float(snap.best_bid) + 0.001 # Maker
+            # Maker Bid + 0.001
+            entry = float(snap.best_bid) + 0.001
+            # Maker Fill Proxy: Did ask or bid touch our entry in 3s?
+            fill_window = token_ticks[
+                (token_ticks.ts_ms >= s["ts_ms"]) &
+                (token_ticks.ts_ms <= s["ts_ms"] + 3000)
+            ]
+            filled = not fill_window.empty and (
+                fill_window.best_ask.min() <= entry or 
+                fill_window.best_bid.min() <= entry
+            )
+            
+        if not filled: continue
             
         row = {'trigger': profile, 'entry': entry, 'base_mid': snap.mid}
         
