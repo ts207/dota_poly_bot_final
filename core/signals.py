@@ -8,13 +8,12 @@ Architecture
 
 Trigger Taxonomy
 ================
-FIGHT            NW swing + kill spike in last 60s.  Best reprice (~29s). ✅ ACTIVE
-SLOW_BLEED       Gradual NW build, no kills.          Reliable but slow (~57s). ✅ ACTIVE
-KILL_EVENT       Kills only, small NW change.         Inconclusive, kept on. ✅ ACTIVE
-ECONOMIC_SWING   NW-only shift (Roshan, buyback).    67% stop-loss rate.    ❌ BLOCKED
-LEAD_FLIP        NW lead changed hands.               High priority trade.   ✅ ACTIVE
-STRUCTURAL_SWING Building destroyed.                  High priority trade.   ✅ ACTIVE
-OVERREACTION     Price moved, map was quiet.          Fade the panic.        ✅ ACTIVE
+FIGHT            NW swing + kill spike in last 60s. ✅ ACTIVE
+SLOW_BLEED       Gradual NW build, no kills.          ✅ ACTIVE
+KILL_EVENT       Kills only, small NW change.         ✅ ACTIVE
+LEAD_FLIP        NW lead changed hands.               ✅ ACTIVE
+STRUCTURAL_SWING Building destroyed.                  ✅ ACTIVE
+OVERREACTION     Price moved, map was quiet.          ✅ ACTIVE
 
 Edge Window
 ===========
@@ -55,16 +54,10 @@ class Trigger:
     FIGHT            = "FIGHT"           # kills + NW swing
     SLOW_BLEED       = "SLOW_BLEED"      # gradual NW build, no kills
     KILL_EVENT       = "KILL_EVENT"      # kills only, small NW
-    ECONOMIC_SWING   = "ECONOMIC_SWING"  # NW only (Roshan/buyback) — BLOCKED
     LEAD_FLIP        = "LEAD_FLIP"       # NW lead changed hands
     STRUCTURAL_SWING = "STRUCTURAL_SWING"# building destroyed
     OVERREACTION     = "OVERREACTION"    # price moved on quiet map
 
-
-# Triggers that empirically fail to reprice Polymarket — skip entirely.
-BLOCKED_TRIGGERS = frozenset({
-    Trigger.ECONOMIC_SWING,  # 67% stop-loss rate in backtesting
-})
 
 # Minimum edge floor per trigger (overrides global min_edge if higher).
 TRIGGER_EDGE_FLOORS: Dict[str, float] = {
@@ -78,7 +71,6 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
     "M_STRONG_CONFIRM":       0.03,
     "L_STRONG_GAP":           0.03,
     "L_FIGHT_GAP":            0.04,
-    "L_ECON_GAP":             0.03,
     "L_STRUCTURAL_GAP":       0.03,
     "L_LEAD_FLIP_GAP":        0.04,
 }

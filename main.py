@@ -131,6 +131,24 @@ async def strategy_loop(
                         bid = float(target_book["best_bid"])
                         ask = float(target_book["best_ask"])
 
+                        # V3 Hard Whitelist: Never trade unknown or legacy triggers
+                        ENABLED_TRIGGERS = {
+                            "M_STRONG_CONFIRM",
+                            "L_STRONG_GAP",
+                            "L_FIGHT_GAP",
+                            "L_STRUCTURAL_GAP",
+                            "L_LEAD_FLIP_GAP",
+                            "FIGHT",
+                            "STRUCTURAL_SWING",
+                            "KILL_EVENT",
+                            "SLOW_BLEED",
+                        }
+
+                        trigger = signal.get("trigger")
+                        if trigger not in ENABLED_TRIGGERS:
+                            logger.info(f"Execution blocked: DISABLED_OR_UNKNOWN_TRIGGER ({trigger})")
+                            continue
+
                         # Pure Maker Logic: Join the bid for ALL triggers
                         price = min(bid + 0.001, ask - 0.001)
                         mode = f"MAKER_{trigger}"

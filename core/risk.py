@@ -80,6 +80,9 @@ class RiskEngine:
         # V3 Trigger Taxonomy sizing
         trigger = signal.get("trigger", signal.get("signal_type", "SLOW_BLEED"))
         
+        if trigger in {None, "", "None"}:
+            return 0.0
+        
         if trigger == "M_STRONG_CONFIRM":
             # Snowball Regime Guard: only full size if game is a stomp with high volatility
             is_snowball = signal.get("is_snowball_regime", False)
