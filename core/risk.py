@@ -80,9 +80,9 @@ class RiskEngine:
         # V3 Trigger Taxonomy sizing
         trigger = signal.get("trigger", signal.get("signal_type", "SLOW_BLEED"))
         
-        if trigger in {"FIGHT", "SLOW_BLEED", "KILL_EVENT", "DOTA_SPIKE_LATENCY"}:
+        if trigger in {"FIGHT", "SLOW_BLEED", "KILL_EVENT", "L_ECON_GAP", "L_STRUCTURAL_GAP"}:
             multiplier = 0.5 * health
-        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING"}:
+        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP"}:
             multiplier = 1.0 * health
         elif trigger == "OVERREACTION":
             multiplier = 0.5 * health

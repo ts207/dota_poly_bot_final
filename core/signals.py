@@ -75,7 +75,10 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
     Trigger.STRUCTURAL_SWING: 0.06,
     Trigger.OVERREACTION:     0.05,
     "ML_PREDICTION":          0.04,
-    "DOTA_SPIKE_LATENCY":     0.03,
+    "L_FIGHT_GAP":            0.04,
+    "L_ECON_GAP":             0.03,
+    "L_STRUCTURAL_GAP":       0.03,
+    "L_LEAD_FLIP_GAP":        0.04,
 }
 
 # Max edge ceiling per trigger (Draft-Trap guard).
@@ -145,22 +148,35 @@ class SignalEngine:
         # Dynamic NW threshold: 2,000 at 15 min, +100/min thereafter
         nw_thresh = 2000 + max(0.0, game_min - 15) * 100
 
-        # ── Latency Spike Detection (True Edge) ──
-        score_2s = abs(float(f.get("score_change_2s", 0.0)))
-        nw_2s = abs(float(f.get("nw_change_2s", 0.0)))
-        market_5s = abs(float(f.get("market_change_5s", 0.0)))
+        # ── 3. Stricter Latency Bucket Taxonomy ──
+        score_5s = abs(float(f.get("score_change_5s", 0.0)))
+        nw_5s = abs(float(f.get("nw_change_5s", 0.0)))
+        market_10s = abs(float(f.get("market_change_10s", 0.0)))
+        
+        # Market must be FLAT (under 1 cent move in 10s) to be a latency gap
+        is_market_flat = market_10s < 0.01
 
-        # DOTA SPIKE: kill or NW jump in last 2s, market hasn't moved in last 5s
-        if (score_2s >= 1 or nw_2s > 500) and market_5s < 0.01:
-            return "DOTA_SPIKE_LATENCY"
+        if is_market_flat:
+            # L_FIGHT: 2+ kills in 5s
+            if score_5s >= 2:
+                return "L_FIGHT_GAP"
+            # L_ECON: 2k+ NW swing in 5s
+            if nw_5s >= 2000:
+                return "L_ECON_GAP"
+            # L_STRUCTURAL: Building fell, market didn't move
+            if bldg == 1:
+                return "L_STRUCTURAL_GAP"
+            
+            # L_LEAD_FLIP: Game flipped, market flat
+            old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
+            new_lead = float(f.get("nw_diff", 0.0))
+            if old_lead * new_lead < 0 and abs(new_lead) > 2000:
+                return "L_LEAD_FLIP_GAP"
 
-        # ── Traditional Taxonomy ──
-        # Overreaction: price moved but map is quiet
+        # ── 4. Traditional Taxonomy (Underreaction) ──
         if market_60 >= 0.05 and score_60 == 0 and nw_60 < 1000:
             return Trigger.OVERREACTION
         
-        old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
-        new_lead = float(f.get("nw_diff", 0.0))
         if old_lead * new_lead < 0 and nw_60 >= nw_thresh:
             return Trigger.LEAD_FLIP
 
@@ -242,11 +258,10 @@ class SignalEngine:
 
         if abs(expected) < self.min_expected_move: return None
 
-        # Executable edge calculation (factoring in ORDER_PRICE_IMPROVE)
-        improve = _env_float("ORDER_PRICE_IMPROVE", 0.01)
+        # Executable edge calculation (Aggressive Maker Mode: Bid + 0.001)
         side = "RADIANT" if expected > 0 else "DIRE"
-        raw_entry = float(f.get("radiant_best_ask" if expected > 0 else "dire_best_ask", 1.0))
-        entry = min(raw_entry + improve, 0.99)
+        raw_bid = float(f.get("radiant_best_bid" if expected > 0 else "dire_best_bid", 0.0))
+        entry = max(raw_bid + 0.001, 0.01)
         fair = min(0.99, max(0.01, mid + expected if expected > 0 else (1.0 - mid) + abs(expected)))
         edge = fair - entry
         
