@@ -7,6 +7,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(BASE_DIR, "data/dota_poly_collection.sqlite")
 
 def get_signal_profile(row):
+    # This matches core/signals.py logic
     score_10s_raw = row['score_change_10s']
     nw_10s_raw = row['nw_change_10s']
     mkt_10s_raw = row['market_change_10s']
@@ -17,7 +18,7 @@ def get_signal_profile(row):
     
     shock_dir = 1 if (score_10s_raw > 0 or nw_10s_raw > 0) else -1
     
-    # M_STRONG_CONFIRM
+    # 1. M_STRONG_CONFIRM
     market_confirmed = (
         (shock_dir == 1 and 0.01 <= mkt_10s_raw <= 0.05) or
         (shock_dir == -1 and -0.05 <= mkt_10s_raw <= -0.01)
@@ -25,11 +26,16 @@ def get_signal_profile(row):
     if strong_shock and market_confirmed:
         return "M_STRONG_CONFIRM"
         
-    # L_STRONG_GAP
+    # 2. L_STRONG_GAP
     if strong_shock and abs(mkt_10s_raw) < 0.01:
         return "L_STRONG_GAP"
         
-    return "OTHER"
+    # 3. Fallbacks (Standard Under-reaction)
+    if score_10s >= 2: return "FIGHT"
+    if nw_10s >= 2000: return "ECON"
+    if score_10s >= 1: return "KILL_EVENT"
+    
+    return "SLOW_BLEED"
 
 def main():
     if not os.path.exists(DB_PATH): return
