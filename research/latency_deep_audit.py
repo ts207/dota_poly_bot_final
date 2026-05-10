@@ -17,11 +17,21 @@ def get_lead_bucket(nw_diff):
     return "dead"
 
 def analyze_latency_deep():
-    if not os.path.exists(SHADOW_LOG):
-        print("No shadow signals found.")
+    # Detect schema (8 cols vs 10 cols)
+    try:
+        sample = pd.read_csv(SHADOW_LOG, nrows=5, header=None)
+        if sample.shape[1] == 8:
+            cols = ["ts", "game_time", "trigger", "side", "mid", "fair", "edge", "action"]
+            df = pd.read_csv(SHADOW_LOG, names=cols)
+            df['token_id'] = '0x' # Fallback
+            df['nw_diff'] = 0.0   # Fallback
+        else:
+            cols = ["ts", "game_time", "trigger", "side", "token_id", "nw_diff", "mid", "fair", "edge", "action"]
+            df = pd.read_csv(SHADOW_LOG, names=cols)
+    except Exception as e:
+        print(f"Error reading shadow log: {e}")
         return
-
-    df = pd.read_csv(SHADOW_LOG)
+    
     if df.empty:
         print("Shadow log is empty.")
         return
