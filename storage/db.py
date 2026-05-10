@@ -37,6 +37,8 @@ class BotDatabase:
                 "market_change_10s": "REAL DEFAULT 0",
                 "market_change_30s": "REAL DEFAULT 0",
                 "combined_mid_disagreement": "REAL DEFAULT 0",
+                "trigger": "TEXT",
+                "fair_price": "REAL",
             },
         }
         with self._get_conn() as conn:
@@ -84,15 +86,15 @@ class BotDatabase:
         with self._get_conn() as conn:
             cur = conn.execute("""
                 INSERT INTO signals (
-                    ts_ms, match_key, market_id, target_token_id, side, signal_type, game_time,
+                    ts_ms, match_key, market_id, target_token_id, side, signal_type, trigger, fair_price, game_time,
                     nw_change_10s, nw_change_30s, nw_change_60s,
                     score_change_10s, score_change_30s, score_change_60s,
                     market_change_10s, market_change_30s, market_change_60s,
                     expected_move, market_lag, edge, combined_mid_disagreement, action
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 int(time.time() * 1000), match_key, market_id, target_token_id, signal["side"],
-                signal["signal_type"], f.get("game_time", 0),
+                signal["signal_type"], signal.get("trigger"), signal.get("fair_price"), f.get("game_time", 0),
                 f.get("nw_change_10s", 0), f.get("nw_change_30s", 0), f.get("nw_change_60s", 0),
                 f.get("score_change_10s", 0), f.get("score_change_30s", 0), f.get("score_change_60s", 0),
                 f.get("market_change_10s", 0), f.get("market_change_30s", 0), f.get("market_change_60s", 0),

@@ -29,6 +29,8 @@ One signal per (match_key, game_minute). Prevents hundreds of redundant
 orders flooding the book for the same opportunity window.
 """
 import os
+import csv
+import time
 from typing import Dict, Any, Optional
 import numpy as np
 
@@ -72,7 +74,6 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
     Trigger.LEAD_FLIP:        0.06,
     Trigger.STRUCTURAL_SWING: 0.06,
     Trigger.OVERREACTION:     0.05,
-    # ML_PREDICTION used when model overrides trigger label
     "ML_PREDICTION":          0.04,
 }
 
@@ -116,8 +117,21 @@ class SignalEngine:
                 print("[SignalEngine] XGBoost ONNX model loaded.")
             except Exception as e:
                 print(f"[SignalEngine] ONNX load failed: {e}")
+        
+        self.shadow_log_path = "data/shadow_signals.csv"
+        self._init_shadow_log()
 
-    # ── classification ────────────────────────────────────────────────────────
+    def _init_shadow_log(self):
+        if not os.path.exists(self.shadow_log_path):
+            os.makedirs("data", exist_ok=True)
+            with open(self.shadow_log_path, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["ts", "game_time", "trigger", "side", "mid", "fair", "edge", "action"])
+
+    def _log_shadow(self, game_time, trigger, side, mid, fair, edge, action):
+        with open(self.shadow_log_path, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([time.time(), game_time, trigger, side, mid, fair, edge, action])
 
     def classify(self, f: Dict[str, Any]) -> str:
         """Label this game-state snapshot with a trigger type."""
@@ -130,38 +144,26 @@ class SignalEngine:
         # Dynamic NW threshold: 2,000 at 15 min, +100/min thereafter
         nw_thresh = 2000 + max(0.0, game_min - 15) * 100
 
-        # Overreaction: price moved but map is quiet
         if market_60 >= 0.05 and score_60 == 0 and nw_60 < 1000:
             return Trigger.OVERREACTION
-
-        # NW lead changed sign — biggest structural shift possible
+        
         old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
         new_lead = float(f.get("nw_diff", 0.0))
         if old_lead * new_lead < 0 and nw_60 >= nw_thresh:
             return Trigger.LEAD_FLIP
 
-        # Tower / barracks destroyed
         if bldg == 1:
             return Trigger.STRUCTURAL_SWING
-
-        # Fight: kills AND large NW swing together
         if nw_60 >= nw_thresh and score_60 >= 2:
             return Trigger.FIGHT
-
-        # Economic swing: large NW shift, no kills (Roshan, buyback, etc.)
         if nw_60 >= nw_thresh and score_60 < 2:
             return Trigger.ECONOMIC_SWING
-
-        # Kill event: kills but small NW change
         if score_60 >= 2:
             return Trigger.KILL_EVENT
 
         return Trigger.SLOW_BLEED
 
-    # ── ML inference ─────────────────────────────────────────────────────────
-
     def predict_win_prob(self, f: Dict[str, Any]) -> float:
-        """Run XGBoost ONNX model. Returns Radiant win probability [0, 1]."""
         if not self.ort_session:
             return float(f.get("mid", 0.5))
 
@@ -174,12 +176,9 @@ class SignalEngine:
         ]], dtype=np.float32)
 
         pred = self.ort_session.run(None, {self._ort_input: features})
-        return float(pred[1][0][1])  # class-1 (Radiant win) probability
-
-    # ── heuristic fallback ───────────────────────────────────────────────────
+        return float(pred[1][0][1])
 
     def _heuristic_expected_move(self, f: Dict[str, Any]) -> float:
-        """V1 heuristic expected move, price-dampened."""
         move  = self.lead_60s_weight  * float(f.get("nw_change_60s", 0.0))
         move += self.lead_30s_weight  * float(f.get("nw_change_30s", 0.0))
         move += self.lead_10s_weight  * float(f.get("nw_change_10s", 0.0))
@@ -193,79 +192,56 @@ class SignalEngine:
         mid = float(f.get("mid", 0.5))
         return raw * (1.0 - mid) * 2.0 if raw > 0 else raw * mid * 2.0
 
-    # ── lifecycle ─────────────────────────────────────────────────────────────
-
     def reset_match(self, match_key: str) -> None:
-        """Clear dedup state when a match ends."""
         self._last_signal_minute.pop(match_key, None)
 
-    # ── main entry point ──────────────────────────────────────────────────────
-
     def generate(self, f: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Evaluate a feature snapshot and return a trade signal or None.
-
-        Pipeline:
-          1. Market quality gates  — spread, mid disagreement
-          2. Deduplication gate    — one signal per game-minute per match
-          3. Trigger classification — what kind of event is this?
-          4. Blocked trigger gate  — skip known-bad trigger types
-          5. ML / heuristic edge   — calculate expected move
-          6. Edge range gate       — 4% < edge <= 9%
-          7. Emit signal
-        """
-        # ── 1. Market quality ─────────────────────────────────────────────────
+        # ── 1. Quality ──
         spread = float(f.get("spread", 1.0))
-        if spread > self.max_spread:
-            return None
-        if float(f.get("combined_mid_disagreement", 0.0)) > self.max_mid_disagreement:
-            return None
+        if spread > self.max_spread: return None
+        if float(f.get("combined_mid_disagreement", 0.0)) > self.max_mid_disagreement: return None
 
-        # ── 2. Deduplication ──────────────────────────────────────────────────
-        match_key   = str(f.get("match_key", ""))
+        # ── 2. Dedup ──
+        match_key = str(f.get("match_key", ""))
         game_minute = int(float(f.get("game_time", 0.0)) // 60)
-        if self._last_signal_minute.get(match_key) == game_minute:
-            return None
+        if self._last_signal_minute.get(match_key) == game_minute: return None
 
-        # ── 3. Trigger classification ─────────────────────────────────────────
+        # ── 3. Trigger ──
         trigger = self.classify(f)
+        if trigger in BLOCKED_TRIGGERS: return None
 
-        # ── 4. Blocked trigger gate ───────────────────────────────────────────
-        if trigger in BLOCKED_TRIGGERS:
-            return None
-
-        # ── 5. Expected move (ML or heuristic) ───────────────────────────────
+        # ── 4. Edge ──
         mid = float(f.get("mid", 0.5))
         if self.ort_session:
-            expected    = self.predict_win_prob(f) - mid
+            expected = self.predict_win_prob(f) - mid
             signal_type = "ML_PREDICTION"
         else:
-            expected    = self._heuristic_expected_move(f)
+            expected = self._heuristic_expected_move(f)
             signal_type = trigger
 
-        edge_floor    = max(self.min_edge, TRIGGER_EDGE_FLOORS.get(signal_type, self.min_edge))
-        required_edge = max(edge_floor, spread * 1.5)
+        if abs(expected) < self.min_expected_move: return None
 
-        # ── 6. Build and gate signal ──────────────────────────────────────────
-        def _emit(side: str, entry: float, move: float) -> Optional[Dict[str, Any]]:
-            edge = abs(move)  # entry == mid, so edge == |expected|
-            if edge <= required_edge or edge > MAX_EDGE:
-                return None
-            self._last_signal_minute[match_key] = game_minute
-            return {
-                "side":          side,
-                "trigger":       trigger,
-                "signal_type":   signal_type,
-                "expected_move": move,
-                "edge":          round(edge, 4),
-                "target_price":  round(entry, 4),
-                "game_minute":   game_minute,
-            }
+        # Executable edge calculation
+        side = "RADIANT" if expected > 0 else "DIRE"
+        entry = float(f.get("radiant_best_ask" if expected > 0 else "dire_best_ask", 1.0))
+        fair = min(0.99, max(0.01, mid + expected if expected > 0 else (1.0 - mid) + abs(expected)))
+        edge = fair - entry
+        
+        # Log for debugging
+        self._log_shadow(f.get("game_time"), trigger, side, mid, fair, edge, 
+                         "FIRE" if self.min_edge <= edge <= MAX_EDGE else "REJECT_EDGE")
 
-        if expected > self.min_expected_move:
-            return _emit("BUY_RADIANT_YES", mid, expected)
+        if not (self.min_edge <= edge <= MAX_EDGE):
+            return None
 
-        if expected < -self.min_expected_move:
-            return _emit("BUY_DIRE_YES", 1.0 - mid, expected)
-
-        return None
+        # ── 5. Emit ──
+        self._last_signal_minute[match_key] = game_minute
+        return {
+            "side": "BUY_RADIANT_YES" if expected > 0 else "BUY_DIRE_YES",
+            "trigger": trigger,
+            "signal_type": signal_type,
+            "expected_move": expected,
+            "fair_price": fair,
+            "edge": edge,
+            "entry_price_target": entry,
+        }

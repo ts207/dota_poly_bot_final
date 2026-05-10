@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS signals (
     target_token_id TEXT,
     side TEXT,
     signal_type TEXT,
+    trigger TEXT,
+    fair_price REAL,
     game_time REAL,
     nw_change_10s REAL DEFAULT 0,
     nw_change_30s REAL DEFAULT 0,
