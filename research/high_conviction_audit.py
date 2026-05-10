@@ -34,7 +34,7 @@ def main():
     conn = sqlite3.connect(DB_PATH)
 
     signals = pd.read_sql_query("""
-    SELECT id, ts_ms, target_token_id, score_change_10s, nw_change_10s, market_change_10s
+    SELECT id, ts_ms, match_key, target_token_id, score_change_10s, nw_change_10s, market_change_10s
     FROM signals
     """, conn)
     # Note: I'll need 'mid_at_signal' which might be in signal_data if not a column.
@@ -57,7 +57,7 @@ def main():
         base_mid = float(before.iloc[0].mid)
         trigger = get_high_conviction_trigger(s)
         
-        row = {'trigger': trigger, 'base_mid': base_mid}
+        row = {'match_key': s['match_key'], 'trigger': trigger, 'base_mid': base_mid}
         for h in [15, 30, 60]:
             future = token_ticks[token_ticks.ts_ms >= s['ts_ms'] + h * 1000].head(1)
             if not future.empty:
@@ -69,16 +69,13 @@ def main():
         rows.append(row)
 
     df = pd.DataFrame(rows)
-    print("\n=== HIGH CONVICTION RE-BUCKET AUDIT ===")
-    for h in [30, 60]:
-        col = f'win_{h}s'
-        print(f"\n--- {h}s Horizon ---")
-        stats = df.groupby('trigger').agg(
-            count=(col, 'count'),
-            win_rate=(col, 'mean'),
-            avg_move=(f'move_{h}s', 'mean')
-        ).sort_values('win_rate', ascending=False)
-        print(stats)
+    summary = df.groupby(['match_key', 'trigger']).agg({
+        'win_30s': ['count', 'mean'],
+        'move_30s': ['mean']
+    }).sort_values(['match_key', ('win_30s', 'mean')], ascending=[True, False])
+    
+    print("\n=== HIGH CONVICTION AUDIT BY MATCH ===")
+    print(summary)
 
 if __name__ == "__main__":
     main()
