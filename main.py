@@ -125,13 +125,27 @@ async def strategy_loop(
                     if size <= 0:
                         logger.info("Risk blocked trade: ZERO_SIZE_OR_HEALTH_GATE")
                     else:
-                        # Aggressive Maker Logic: Join the bid at +0.001 to capture stale sellers
-                        price = max(float(target_book["best_bid"]) + 0.001, 0.01)
+                        # Hybrid Pricing: Taker for Momentum, Maker for Gaps
+                        trigger = signal.get("trigger", "SLOW_BLEED")
+                        fair = float(signal.get("fair_price", 0.5))
+                        bid = float(target_book["best_bid"])
+                        ask = float(target_book["best_ask"])
+
+                        if trigger == "M_STRONG_CONFIRM":
+                            price = min(ask, fair)
+                            mode = "TAKER"
+                        elif trigger == "L_STRONG_GAP":
+                            price = min(bid + 0.001, ask - 0.001)
+                            mode = "MAKER"
+                        else:
+                            price = max(bid + 0.001, 0.01)
+                            mode = "MAKER_DEFAULT"
+
                         logger.signal(
-                            f"{signal['side']} | MAKER_MODE | Trigger={signal.get('trigger')} "
+                            f"{signal['side']} | {mode} | Trigger={trigger} "
                             f"| Edge={signal['edge']:.4f} "
-                            f"| Fair={signal.get('fair_price', 0):.4f} "
-                            f"| Entry(Bid+0.001)={price:.4f} "
+                            f"| Fair={fair:.4f} "
+                            f"| Price={price:.4f} "
                             f"| Exp={signal['expected_move']:.4f}"
                         )
                         signal_id = db.log_signal(signal, f, dota_tick["match_key"], market_id, target_token_id=target_token_id)

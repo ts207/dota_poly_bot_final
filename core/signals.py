@@ -75,6 +75,7 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
     Trigger.STRUCTURAL_SWING: 0.06,
     Trigger.OVERREACTION:     0.05,
     "ML_PREDICTION":          0.04,
+    "M_STRONG_CONFIRM":       0.03,
     "L_STRONG_GAP":           0.03,
     "L_FIGHT_GAP":            0.04,
     "L_ECON_GAP":             0.03,
@@ -149,35 +150,47 @@ class SignalEngine:
         # Dynamic NW threshold: 2,000 at 15 min, +100/min thereafter
         nw_thresh = 2000 + max(0.0, game_min - 15) * 100
 
-        # ── 3. Stricter Latency Bucket Taxonomy ──
-        score_5s = abs(float(f.get("score_change_5s", 0.0)))
-        nw_5s = abs(float(f.get("nw_change_5s", 0.0)))
-        market_10s = abs(float(f.get("market_change_10s", 0.0)))
+        # ── 3. Stricter Latency & Momentum Taxonomy ──
+        score_10s_raw = float(f.get("score_change_10s", 0.0))
+        nw_10s_raw = float(f.get("nw_change_10s", 0.0))
+        market_10s_raw = float(f.get("market_change_10s", 0.0))
         
-        # Market must be FLAT (under 1 cent move in 10s) to be a latency gap
-        is_market_flat = market_10s < 0.01
+        score_10s = abs(score_10s_raw)
+        nw_10s = abs(nw_10s_raw)
+        strong_shock = score_10s >= 2 and nw_10s >= 2000
+        
+        shock_dir = 0
+        if score_10s_raw > 0 or nw_10s_raw > 0: shock_dir = 1
+        elif score_10s_raw < 0 or nw_10s_raw < 0: shock_dir = -1
 
+        # M_STRONG_CONFIRM: Shock + Market Confirmation (1-5 cents) in same direction
+        market_confirmed = (
+            (shock_dir == 1 and 0.01 <= market_10s_raw <= 0.05) or
+            (shock_dir == -1 and -0.05 <= market_10s_raw <= -0.01)
+        )
+        if strong_shock and market_confirmed:
+            return "M_STRONG_CONFIRM"
+
+        # L_STRONG_GAP: Dead Gap (Market < 1 cent)
+        is_market_flat = abs(market_10s_raw) < 0.01
         if is_market_flat:
-            # L_STRONG: 2+ kills AND 2k+ NW swing in 5s (Golden Bucket)
-            if score_5s >= 2 and nw_5s >= 2000:
+            if strong_shock:
                 return "L_STRONG_GAP"
-            # L_FIGHT: 2+ kills in 5s
-            if score_5s >= 2:
-                return "L_FIGHT_GAP"
-            # L_ECON: 2k+ NW swing in 5s
-            if nw_5s >= 2000:
-                return "L_ECON_GAP"
-            # L_STRUCTURAL: Building fell, market didn't move
-            if bldg == 1:
-                return "L_STRUCTURAL_GAP"
+            # Fallbacks
+            if score_10s >= 2: return "L_FIGHT_GAP"
+            if nw_10s >= 2000: return "L_ECON_GAP"
+            if bldg == 1: return "L_STRUCTURAL_GAP"
             
-            # L_LEAD_FLIP: Game flipped, market flat
+            # L_LEAD_FLIP_GAP
             old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
             new_lead = float(f.get("nw_diff", 0.0))
             if old_lead * new_lead < 0 and abs(new_lead) > 2000:
                 return "L_LEAD_FLIP_GAP"
 
         # ── 4. Traditional Taxonomy (Underreaction) ──
+        old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
+        new_lead = float(f.get("nw_diff", 0.0))
+        
         if market_60 >= 0.05 and score_60 == 0 and nw_60 < 1000:
             return Trigger.OVERREACTION
         

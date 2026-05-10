@@ -16,8 +16,12 @@ def get_high_conviction_trigger(row):
     is_flat = mkt_10s < 0.01
     
     if is_flat:
-        if score_10s >= 2: return "L_FIGHT (2+ Kills)"
-        if nw_10s >= 2000: return "L_ECON (2k+ NW)"
+        if score_10s >= 2 and nw_10s >= 2000:
+            return "L_STRONG_GAP"
+        if score_10s >= 2:
+            return "L_FIGHT (2+ Kills)"
+        if nw_10s >= 2000:
+            return "L_ECON (2k+ NW)"
     
     # Otherwise check underreaction
     if score_10s >= 2 and nw_10s >= 2000: return "UNDERREACTION_STRONG"
