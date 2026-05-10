@@ -132,6 +132,10 @@ async def strategy_loop(
                         ask = float(target_book["best_ask"])
 
                         if trigger == "M_STRONG_CONFIRM":
+                            exec_edge = fair - ask
+                            if exec_edge < 0.03:
+                                logger.info(f"Execution blocked: M_STRONG_CONFIRM_TAKER_EDGE_TOO_SMALL (Edge={exec_edge:.4f})")
+                                continue
                             price = min(ask, fair)
                             mode = "TAKER"
                         elif trigger == "L_STRONG_GAP":

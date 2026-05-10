@@ -85,16 +85,13 @@ class RiskEngine:
         elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP", "FIGHT"}:
             multiplier = 0.5 * health
         elif trigger in {"L_STRONG_GAP", "SLOW_BLEED", "KILL_EVENT"}:
-            multiplier = 0.2 * health # Tiny size for carry/bleed
-        elif trigger == "OVERREACTION":
+            multiplier = 0.2 * health
+        elif trigger in {"OVERREACTION", "ML_PREDICTION"}:
             multiplier = 0.5 * health
         else:
-            multiplier = 0.1 * health # Default safety
-        elif trigger == "ML_PREDICTION":
-            multiplier = 0.5 * health
-        else:
-            multiplier = 0.25 * health
-
+            multiplier = 0.1 * health
+        
+        # Risk Cap: Never more than 5% of bankroll per trade
         size = self.max_order_size * multiplier
 
         if remaining_capacity is not None:
