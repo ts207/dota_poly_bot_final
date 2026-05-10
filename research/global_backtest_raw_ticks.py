@@ -10,7 +10,16 @@ def main():
     if not os.path.exists(DB_PATH): return
     conn = sqlite3.connect(DB_PATH)
 
-    print("Loading raw ticks (this may take a moment)...")
+    print("Loading data and mapping tokens...")
+    # Get token mapping from historical signals
+    sig_map = pd.read_sql_query("SELECT DISTINCT match_key, target_token_id, side FROM signals", conn)
+    mapping = {}
+    for _, row in sig_map.iterrows():
+        mk = row['match_key']
+        if mk not in mapping: mapping[mk] = {}
+        if 'RADIANT' in row['side']: mapping[mk]['RADIANT'] = row['target_token_id']
+        else: mapping[mk]['DIRE'] = row['target_token_id']
+
     dota = pd.read_sql_query("SELECT * FROM dota_ticks ORDER BY match_key, ts_ms", conn)
     market = pd.read_sql_query("SELECT * FROM market_ticks WHERE token_id != 'COMBINED_RADIANT' ORDER BY token_id, ts_ms", conn)
     conn.close()
@@ -19,102 +28,103 @@ def main():
     matches = dota.match_key.unique()
 
     for mk in matches:
-        m_ticks = dota[dota.match_key == mk].copy()
-        m_ticks['game_min'] = m_ticks['game_time'] / 60
-        
-        # Calculate 10s features (approximating with 10,000ms window)
-        # Using shift/rolling is faster than per-tick lookups
-        m_ticks = m_ticks.sort_values('ts_ms')
-        
-        # We need to map market ticks to each dota tick
-        # This is the slow part, we'll use merge_asof
-        m_ticks['target_token_id'] = m_ticks.apply(lambda x: "RADIANT" if x['radiant_score'] > 0 else "RADIANT", axis=1) # Mock token mapping
-        
-        # For a proper backtest we'd need the real token mapping per match, 
-        # but since we only have one market per match in the DB usually, we'll use the most common one.
-        # Let's just use the first market_id/token_id we find for that match period.
-        
-        m_market = market[(market.ts_ms >= m_ticks.ts_ms.min()) & (market.ts_ms <= m_ticks.ts_ms.max())].copy()
-        if m_market.empty: continue
-        
-        # Use a single token_id for simplicity in this global audit
-        tid = m_market.token_id.iloc[0]
-        m_market = m_market[m_market.token_id == tid].sort_values('ts_ms')
+        if mk not in mapping or 'RADIANT' not in mapping[mk] or 'DIRE' not in mapping[mk]:
+            continue
+            
+        m_ticks = dota[dota.match_key == mk].copy().sort_values('ts_ms')
+        rad_token = mapping[mk]['RADIANT']
+        dire_token = mapping[mk]['DIRE']
 
-        # Merge dota and market ticks
-        merged = pd.merge_asof(m_ticks, m_market[['ts_ms', 'mid', 'best_bid', 'best_ask']], on='ts_ms', direction='backward')
+        # Get market ticks for both tokens
+        m_market = market[(market.token_id.isin([rad_token, dire_token]))].copy().sort_values(['token_id', 'ts_ms'])
         
-        # Calculate changes over 10s (10000ms)
-        # Using a fixed step lookup for speed
+        # Merge dota with both radiant and dire market ticks
+        m_rad = m_market[m_market.token_id == rad_token]
+        m_dire = m_market[m_market.token_id == dire_token]
+        
+        # Merge dota with radiant market (primary)
+        merged = pd.merge_asof(m_ticks, m_rad[['ts_ms', 'mid', 'best_bid', 'best_ask']], on='ts_ms', direction='backward')
+        
+        # Calculate 10s and 60s windows
         for offset in [10000, 60000]:
             merged_off = merged[['ts_ms', 'nw_diff', 'radiant_score', 'dire_score', 'mid']].copy()
             merged_off['ts_ms'] = merged_off['ts_ms'] + offset
             merged = pd.merge_asof(merged, merged_off, on='ts_ms', direction='backward', suffixes=('', f'_{offset}ms'))
 
+        # Directional Features
         merged['nw_10s'] = merged['nw_diff'] - merged['nw_diff_10000ms']
-        merged['score_10s'] = (merged['radiant_score'] + merged['dire_score']) - (merged['radiant_score_10000ms'] + merged['dire_score_10000ms'])
+        merged['score_diff'] = merged['radiant_score'] - merged['dire_score']
+        merged['score_diff_10s'] = merged['score_diff'] - (merged['radiant_score_10000ms'] - merged['dire_score_10000ms'])
         merged['mkt_10s'] = merged['mid'] - merged['mid_10000ms']
         merged['mkt_60s'] = merged['mid'] - merged['mid_60000ms']
         
         for idx, row in merged.iterrows():
-            # Apply V3 Logic
-            s10_raw = row['score_10s']
+            s10_raw = row['score_diff_10s']
             n10_raw = row['nw_10s']
             m10_raw = row['mkt_10s']
             
-            s10, n10 = abs(s10_raw), abs(n10_raw)
-            if s10 < 2 or n10 < 2000: continue # Only Strong Shocks
+            s10_abs, n10_abs = abs(s10_raw), abs(n10_raw)
+            if s10_abs < 2 or n10_abs < 2000: continue
             
-            shock_dir = 1 if (s10_raw > 0 or n10_raw > 0) else -1
-            
-            # Regime
+            # Which side are we buying?
+            # Positive shock (Radiant kills/NW) -> Buy Radiant
+            # Negative shock (Dire kills/NW) -> Buy Dire
+            if s10_raw > 0 or n10_raw > 2000:
+                side = "RADIANT"
+                target_token = rad_token
+                mkt_move = m10_raw
+                cur_mid, cur_bid, cur_ask = row['mid'], row['best_bid'], row['best_ask']
+            else:
+                side = "DIRE"
+                target_token = dire_token
+                # Need Dire market price. We merge_asof for speed.
+                dire_snap = m_dire[m_dire.ts_ms <= row['ts_ms']].tail(1)
+                if dire_snap.empty: continue
+                cur_mid, cur_bid, cur_ask = float(dire_snap.iloc[0].mid), float(dire_snap.iloc[0].best_bid), float(dire_snap.iloc[0].best_ask)
+                # Market move for Dire YES is inverse of Radiant YES move (approximately)
+                # But to be safe, we'd need dire_mid_10s. Let's use radiant move inverted.
+                mkt_move = -m10_raw 
+
             is_snowball = abs(row['nw_diff']) >= 10000 and abs(row['mkt_60s']) >= 0.03 and row['game_time'] >= 1200
             
             trigger = None
-            entry = 0
-            
-            # M_STRONG_CONFIRM
-            m_confirmed = (shock_dir == 1 and 0.01 <= m10_raw <= 0.05) or (shock_dir == -1 and -0.05 <= m10_raw <= -0.01)
-            if m_confirmed:
+            # M_STRONG_CONFIRM: Shock + same-direction move (1-5 cents)
+            if 0.01 <= mkt_move <= 0.05:
                 trigger = "M_STRONG_CONFIRM"
-                entry = min(float(row['best_ask']) + 0.01, 0.99)
+                entry = min(cur_ask + 0.01, 0.99)
                 filled = True
-            elif abs(m10_raw) < 0.01:
+            # L_STRONG_GAP: Dead Gap (< 1 cent move)
+            elif abs(mkt_move) < 0.01:
                 trigger = "L_STRONG_GAP"
-                entry = float(row['best_bid']) + 0.001
-                # Fill Proxy (Check next 3s)
-                f_window = m_market[(m_market.ts_ms >= row['ts_ms']) & (m_market.ts_ms <= row['ts_ms'] + 3000)]
+                entry = cur_bid + 0.001
+                f_window = m_market[(m_market.token_id == target_token) & (m_market.ts_ms >= row['ts_ms']) & (m_market.ts_ms <= row['ts_ms'] + 3000)]
                 filled = not f_window.empty and (f_window.best_ask.min() <= entry or f_window.best_bid.min() <= entry)
-            
+            else:
+                continue
+
             if trigger and filled:
-                # Find exit at 30s
-                exit_snap = m_market[m_market.ts_ms >= row['ts_ms'] + 30000].head(1)
-                if not exit_snap.empty:
-                    pnl = float(exit_snap.iloc[0].best_bid) - entry
-                    results.append({
-                        'match': mk,
-                        'trigger': trigger,
-                        'is_snowball': is_snowball,
-                        'pnl_30s': pnl
-                    })
+                res = {'match': mk, 'trigger': trigger, 'is_snowball': is_snowball}
+                for h in [30, 60, 120]:
+                    exit_snap = m_market[(m_market.token_id == target_token) & (m_market.ts_ms >= row['ts_ms'] + h * 1000)].head(1)
+                    res[f'pnl_{h}s'] = float(exit_snap.iloc[0].best_bid) - entry if not exit_snap.empty else np.nan
+                results.append(res)
 
     df = pd.DataFrame(results)
     if df.empty:
-        print("No signals found in global tick audit.")
+        print("No signals found in hardened audit.")
         return
 
-    print("\n=== GLOBAL TICK-LEVEL BACKTEST (ALL MATCHES) ===")
+    print("\n=== HARDENED GLOBAL TICK BACKTEST ===")
     summary = df.groupby(['trigger', 'is_snowball']).agg({
-        'pnl_30s': ['count', 'mean', 'sum']
+        'pnl_30s': ['count', 'mean'],
+        'pnl_120s': ['mean']
     }).round(4)
     print(summary)
     
-    print("\nBy Match (M_STRONG_CONFIRM | Snowball=True):")
-    stomp_df = df[(df.trigger == "M_STRONG_CONFIRM") & (df.is_snowball == True)]
-    if not stomp_df.empty:
-        print(stomp_df.groupby('match').pnl_30s.mean())
-    else:
-        print("No snowball momentum signals found in any match.")
+    print("\nM_STRONG_CONFIRM | Snowball=True | By Match:")
+    stomp = df[(df.trigger == "M_STRONG_CONFIRM") & (df.is_snowball == True)]
+    if not stomp.empty:
+        print(stomp.groupby('match').pnl_120s.mean())
 
 if __name__ == "__main__":
     main()
