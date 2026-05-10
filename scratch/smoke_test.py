@@ -19,7 +19,7 @@ fight_features = {
     "score_diff": 5.0,
     "nw_change_60s": 2500.0,  # big NW swing
     "score_change_60s": 3.0,  # kills happened
-    "mid": 0.65,
+    "mid": 0.82,   # ML prob ~0.875 → edge ~5.5% → within 4-9% window
     "spread": 0.02,
     "combined_mid_disagreement": 0.01,
     "building_change_60s": 0,
