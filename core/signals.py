@@ -307,7 +307,15 @@ class SignalEngine:
             if abs(fair - last_fair) < 0.03:
                 return None
 
-        # ── 5. Emit ──
+        # ── 5. Regime Detection (Snowball Guard) ──
+        # Lead > 10k, Market Volatility > 3 cents in 60s, Game Time > 20m
+        is_snowball = (
+            abs(float(f.get("nw_diff", 0.0))) >= 10000 and
+            abs(float(f.get("market_change_60s", 0.0))) >= 0.03 and
+            float(f.get("game_time", 0.0)) >= 1200
+        )
+
+        # ── 6. Emit ──
         self._last_signal_state[match_key] = (game_minute, fair)
         return {
             "side": "BUY_RADIANT_YES" if expected > 0 else "BUY_DIRE_YES",
@@ -317,4 +325,5 @@ class SignalEngine:
             "fair_price": fair,
             "edge": edge,
             "entry_price_target": entry,
+            "is_snowball_regime": is_snowball
         }

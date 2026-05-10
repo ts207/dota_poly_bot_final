@@ -81,7 +81,9 @@ class RiskEngine:
         trigger = signal.get("trigger", signal.get("signal_type", "SLOW_BLEED"))
         
         if trigger == "M_STRONG_CONFIRM":
-            multiplier = 1.0 * health
+            # Snowball Regime Guard: only full size if game is a stomp with high volatility
+            is_snowball = signal.get("is_snowball_regime", False)
+            multiplier = 1.0 * health if is_snowball else 0.1 * health
         elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP", "FIGHT"}:
             multiplier = 0.5 * health
         elif trigger in {"L_STRONG_GAP", "SLOW_BLEED", "KILL_EVENT"}:
