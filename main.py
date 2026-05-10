@@ -131,26 +131,19 @@ async def strategy_loop(
                         bid = float(target_book["best_bid"])
                         ask = float(target_book["best_ask"])
 
-                        if trigger == "M_STRONG_CONFIRM":
-                            exec_edge = fair - ask
-                            if exec_edge < 0.03:
-                                logger.info(f"Execution blocked: M_STRONG_CONFIRM_TAKER_EDGE_TOO_SMALL (Edge={exec_edge:.4f})")
-                                continue
-                            price = min(ask, fair)
-                            mode = "TAKER"
-                        elif trigger == "L_STRONG_GAP":
-                            price = min(bid + 0.001, ask - 0.001)
-                            mode = "MAKER"
-                        else:
-                            price = max(bid + 0.001, 0.01)
-                            mode = "MAKER_DEFAULT"
+                        # Pure Maker Logic: Join the bid for ALL triggers
+                        price = min(bid + 0.001, ask - 0.001)
+                        mode = f"MAKER_{trigger}"
+
+                        # Maker Edge Guard: Ensure fair value is still > 3c above our entry
+                        exec_edge = fair - price
+                        if exec_edge < 0.03:
+                            logger.info(f"Execution blocked: MAKER_EDGE_TOO_SMALL (Edge={exec_edge:.4f}, Fair={fair:.4f}, Price={price:.4f})")
+                            continue
 
                         logger.signal(
-                            f"{signal['side']} | {mode} | Trigger={trigger} "
-                            f"| Edge={signal['edge']:.4f} "
-                            f"| Fair={fair:.4f} "
-                            f"| Price={price:.4f} "
-                            f"| Exp={signal['expected_move']:.4f} "
+                            f"{signal['side']} | {mode} | Edge={exec_edge:.4f} "
+                            f"| Fair={fair:.4f} | Price={price:.4f} "
                             f"| Snowball={signal.get('is_snowball_regime')}"
                         )
                         signal_id = db.log_signal(signal, f, dota_tick["match_key"], market_id, target_token_id=target_token_id)
