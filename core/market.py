@@ -22,8 +22,9 @@ def combine_binary_books(
     if ts_ms is not None:
         ts = int(ts_ms)
     elif r_ts and d_ts:
-        # A combined book is only as fresh as its older underlying token book.
-        ts = min(r_ts, d_ts)
+        # Use the fresher timestamp to prevent unnecessary staleness rejections
+        # if one token is extremely illiquid/inactive.
+        ts = max(r_ts, d_ts)
     else:
         ts = r_ts or d_ts or int(time.time() * 1000)
 

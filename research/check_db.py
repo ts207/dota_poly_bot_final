@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 
-conn = sqlite3.connect('/home/irene/dota_poly_bot_final/data/dota_poly_collection.sqlite')
+conn = sqlite3.connect('/home/irene/dota_poly_bot_fin./data/dota_poly_collection.sqlite')
 cursor = conn.cursor()
 cursor.execute("SELECT count(DISTINCT match_key), count(*) FROM dota_ticks")
 matches, ticks = cursor.fetchone()

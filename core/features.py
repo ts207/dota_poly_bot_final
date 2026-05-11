@@ -14,12 +14,11 @@ class RollingWindow:
         while self.items and self.items[0]["ts_ms"] < cutoff:
             self.items.popleft()
 
-    def closest_ago(self, now_ms: int, seconds: int, tolerance_seconds: int = 3) -> Optional[Dict[str, Any]]:
-        """Return a tick near `seconds` ago only if enough real history exists.
+    def reset(self):
+        self.items.clear()
 
-        Stricter version: check that the oldest item in the window is actually
-        at least `seconds` old relative to `now_ms`.
-        """
+    def closest_ago(self, now_ms: int, seconds: int, tolerance_seconds: int = 3) -> Optional[Dict[str, Any]]:
+        """Return a tick near `seconds` ago in real time."""
         if not self.items:
             return None
         
@@ -38,6 +37,26 @@ class RollingWindow:
             
         return min(candidates, key=lambda x: abs(int(x.get("ts_ms", 0)) - target))
 
+    def closest_ago_game_time(self, now_game_s: float, seconds_ago: float, tolerance_s: float = 10.0) -> Optional[Dict[str, Any]]:
+        """Return a tick near `seconds_ago` in game time. 
+        Increased tolerance to 10s for draft/early game stability.
+        """
+        if not self.items:
+            return None
+            
+        target_game_time = now_game_s - seconds_ago
+        
+        # Filter for items within tolerance of target game time
+        candidates = [x for x in self.items if abs(x.get("game_time", 0) - target_game_time) <= tolerance_s]
+        if not candidates:
+            # Fallback: if we are at the very start of the match (game_time < 60s),
+            # use the earliest available tick as the baseline for change detection.
+            if now_game_s < 60.0:
+                return self.items[0]
+            return None
+            
+        return min(candidates, key=lambda x: abs(x.get("game_time", 0) - target_game_time))
+
 
 class FeatureEngine:
     def __init__(self):
@@ -50,20 +69,27 @@ class FeatureEngine:
     def add_market(self, tick: Dict[str, Any]):
         self.market.add(tick)
 
+    def reset(self):
+        self.dota.reset()
+        self.market.reset()
+
     @staticmethod
     def _score_diff(t: Dict[str, Any]) -> int:
         return int(t.get("radiant_score", 0)) - int(t.get("dire_score", 0))
 
     def compute(self, dota_now: Dict[str, Any], market_now: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         now_ms = dota_now["ts_ms"]
+        game_time_now = dota_now["game_time"]
 
-        d2 = self.dota.closest_ago(now_ms, 2, tolerance_seconds=1)
-        d5 = self.dota.closest_ago(now_ms, 5, tolerance_seconds=1)
-        d10 = self.dota.closest_ago(now_ms, 10)
-        d30 = self.dota.closest_ago(now_ms, 30)
-        d60 = self.dota.closest_ago(now_ms, 60)
-        d180 = self.dota.closest_ago(now_ms, 180)
+        # Use Game Time for Dota features to account for Steam API duration and pauses
+        d2 = self.dota.closest_ago_game_time(game_time_now, 2, tolerance_s=2)
+        d5 = self.dota.closest_ago_game_time(game_time_now, 5, tolerance_s=3)
+        d10 = self.dota.closest_ago_game_time(game_time_now, 10)
+        d30 = self.dota.closest_ago_game_time(game_time_now, 30)
+        d60 = self.dota.closest_ago_game_time(game_time_now, 60)
+        d180 = self.dota.closest_ago_game_time(game_time_now, 180)
 
+        # Market ticks remain real-time (ts_ms) as the exchange doesn't have "game time"
         m2 = self.market.closest_ago(market_now["ts_ms"], 2, tolerance_seconds=1)
         m5 = self.market.closest_ago(market_now["ts_ms"], 5, tolerance_seconds=1)
         m10 = self.market.closest_ago(market_now["ts_ms"], 10)
@@ -80,7 +106,7 @@ class FeatureEngine:
 
         f = {
             "match_key": dota_now.get("match_key", ""),
-            "game_time": float(dota_now.get("game_time", 0.0)),
+            "game_time": game_time_now,
             "nw_diff": nw_now,
             "nw_diff_pct": float(dota_now.get("nw_diff_pct", 0.0)),
             "score_diff": score_now,
@@ -119,6 +145,20 @@ class FeatureEngine:
                 f[f"nw_change_{sec}s_pct"] = 0.0
                 f[f"score_change_{sec}s"] = 0
                 f[f"building_change_{sec}s"] = 0
+
+        # --- Lead Velocity & Acceleration ---
+        # Velocity: NW change per second over the last 10s
+        f["nw_velocity"] = f["nw_change_10s"] / 10.0
+        
+        # Acceleration: Change in velocity (10s velocity vs previous 10s-20s velocity)
+        # We use d20 to get the state from 20s ago
+        d20 = self.dota.closest_ago(now_ms, 20)
+        if d10 and d20:
+            prev_nw_10s = float(d10.get("nw_diff", 0.0)) - float(d20.get("nw_diff", 0.0))
+            prev_velocity = prev_nw_10s / 10.0
+            f["nw_acceleration"] = (f["nw_velocity"] - prev_velocity) / 10.0
+        else:
+            f["nw_acceleration"] = 0.0
 
         for sec, m_old in ((2, m2), (5, m5), (10, m10), (30, m30), (60, m60)):
             f[f"market_change_{sec}s"] = mid_now - float(m_old.get("mid", mid_now)) if m_old else 0.0

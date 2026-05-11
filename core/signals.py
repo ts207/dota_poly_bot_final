@@ -1,31 +1,23 @@
 """
-Signal Engine — V3 (ML Scalper)
+Signal Engine — simplified trigger taxonomy.
 
-Architecture
-============
-1.  classify()   — label the game-state event type from raw telemetry.
-2.  generate()   — gate, ML inference, edge calculation, and signal emission.
+Core execution triggers
+=======================
+FIGHT_GAP       Fight/kill shock while market is flat. Strength distinguishes STRONG vs NORMAL.
+LEAD_FLIP_GAP   Radiant-lead sign flipped while market is flat.
+STRUCTURE_GAP   Building-state changed while market is flat.
+MARKET_CONFIRM  Strong Dota shock and market has started confirming, but may not be finished.
 
-Trigger Taxonomy
-================
-FIGHT            NW swing + kill spike in last 60s. ✅ ACTIVE
-SLOW_BLEED       Gradual NW build, no kills.          ✅ ACTIVE
-KILL_EVENT       Kills only, small NW change.         ✅ ACTIVE
-LEAD_FLIP        NW lead changed hands.               ✅ ACTIVE
-STRUCTURAL_SWING Building destroyed.                  ✅ ACTIVE
-OVERREACTION     Price moved, map was quiet.          ✅ ACTIVE
+Research/non-execution labels
+=============================
+FIGHT_EVENT, LEAD_FLIP_EVENT, STRUCTURE_EVENT, OVERREACTION, SLOW_BLEED.
 
-Edge Window
-===========
-Only fire when 4% < edge <= 9%.
-  - Below 4%: not worth the fill risk.
-  - Above 9%: Draft Trap — model sees 99% but market is pinned at 89% for
-              tail-risk reasons (scaling draft, disconnect risk). Won't reprice.
-
-Deduplication
-=============
-One signal per (match_key, game_minute). Prevents hundreds of redundant
-orders flooding the book for the same opportunity window.
+Design
+======
+trigger = event family
+trigger_strength = NORMAL / STRONG
+trigger_window = 10s / 60s
+market_state = FLAT / CONFIRMING / MOVED / QUIET
 """
 import os
 import csv
@@ -39,6 +31,29 @@ except ImportError:
     ort = None
 
 
+
+
+# ── trigger normalization ─────────────────────────────────────────────────────
+
+TRIGGER_ALIASES = {
+    # Old latency names -> simplified execution taxonomy.
+    "L_STRONG_GAP": "FIGHT_GAP",
+    "L_FIGHT_GAP": "FIGHT_GAP",
+    "L_LEAD_FLIP_GAP": "LEAD_FLIP_GAP",
+    "L_STRUCTURAL_GAP": "STRUCTURE_GAP",
+    "M_STRONG_CONFIRM": "MARKET_CONFIRM",
+    # Old broad names -> research/event labels, not first-test execution triggers.
+    "FIGHT": "FIGHT_EVENT",
+    "KILL_EVENT": "FIGHT_EVENT",
+    "LEAD_FLIP": "LEAD_FLIP_EVENT",
+    "STRUCTURAL_SWING": "STRUCTURE_EVENT",
+}
+
+
+def normalize_trigger(trigger: str) -> str:
+    t = str(trigger or "").strip().upper()
+    return TRIGGER_ALIASES.get(t, t)
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def _env_float(name: str, default: float) -> float:
@@ -48,35 +63,60 @@ def _env_float(name: str, default: float) -> float:
         return default
 
 
+def _env_set(name: str, default: str = "") -> set[str]:
+    raw = os.getenv(name, default) or ""
+    return {normalize_trigger(x) for x in raw.split(",") if x.strip()}
+
+
+def _env_float_map(name: str, defaults: Dict[str, float]) -> Dict[str, float]:
+    """Parse comma-separated TRIGGER:float overrides and merge with defaults.
+
+    Example: TRIGGER_EDGE_FLOORS=FIGHT_GAP:0.05,MARKET_CONFIRM:0.05
+    """
+    out = {normalize_trigger(k): float(v) for k, v in defaults.items()}
+    raw = os.getenv(name, "") or ""
+    for part in raw.split(","):
+        part = part.strip()
+        if not part or ":" not in part:
+            continue
+        key, val = part.split(":", 1)
+        try:
+            out[normalize_trigger(key)] = float(val.strip())
+        except ValueError:
+            continue
+    return out
+
+
 # ── trigger taxonomy ──────────────────────────────────────────────────────────
 
 class Trigger:
-    FIGHT            = "FIGHT"           # kills + NW swing
-    SLOW_BLEED       = "SLOW_BLEED"      # gradual NW build, no kills
-    KILL_EVENT       = "KILL_EVENT"      # kills only, small NW
-    LEAD_FLIP        = "LEAD_FLIP"       # NW lead changed hands
-    STRUCTURAL_SWING = "STRUCTURAL_SWING"# building destroyed
-    OVERREACTION     = "OVERREACTION"    # price moved on quiet map
+    FIGHT_GAP       = "FIGHT_GAP"
+    LEAD_FLIP_GAP   = "LEAD_FLIP_GAP"
+    STRUCTURE_GAP   = "STRUCTURE_GAP"
+    MARKET_CONFIRM  = "MARKET_CONFIRM"
+    FIGHT_EVENT     = "FIGHT_EVENT"
+    LEAD_FLIP_EVENT = "LEAD_FLIP_EVENT"
+    STRUCTURE_EVENT = "STRUCTURE_EVENT"
+    OVERREACTION    = "OVERREACTION"
+    SLOW_BLEED      = "SLOW_BLEED"
 
 
-# Minimum edge floor per trigger (overrides global min_edge if higher).
+# Minimum edge floor per trigger. Global SIGNAL_MIN_EDGE remains a hard floor.
 TRIGGER_EDGE_FLOORS: Dict[str, float] = {
-    Trigger.FIGHT:            0.04,
-    Trigger.SLOW_BLEED:       0.04,
-    Trigger.KILL_EVENT:       0.04,
-    Trigger.LEAD_FLIP:        0.06,
-    Trigger.STRUCTURAL_SWING: 0.06,
-    Trigger.OVERREACTION:     0.05,
-    "ML_PREDICTION":          0.04,
-    "M_STRONG_CONFIRM":       0.03,
-    "L_STRONG_GAP":           0.03,
-    "L_FIGHT_GAP":            0.04,
-    "L_STRUCTURAL_GAP":       0.03,
-    "L_LEAD_FLIP_GAP":        0.04,
+    Trigger.FIGHT_GAP:      0.03,
+    Trigger.LEAD_FLIP_GAP:  0.03,
+    Trigger.STRUCTURE_GAP:  0.03,
+    Trigger.STRUCTURE_EVENT:0.045,
+    Trigger.MARKET_CONFIRM: 0.03,
+    Trigger.OVERREACTION:   0.06,
+    Trigger.SLOW_BLEED:     0.045,
 }
 
 # Max edge ceiling per trigger (Draft-Trap guard).
 MAX_EDGE = 0.09
+
+# Triggers disabled before signal emission. Set via BLOCKED_TRIGGERS in .env.
+# Parsed inside SignalEngine.__init__ after load_dotenv() has run.
 
 
 # ── engine ────────────────────────────────────────────────────────────────────
@@ -88,6 +128,12 @@ class SignalEngine:
     """
 
     def __init__(self):
+        # Trigger kill switch. Parsed here so .env has already been loaded by main.py.
+        self.blocked_triggers = _env_set("BLOCKED_TRIGGERS", "")
+        self.trigger_edge_floors = _env_float_map("TRIGGER_EDGE_FLOORS", TRIGGER_EDGE_FLOORS)
+        self.last_rejection: Optional[Dict[str, Any]] = None
+        self._last_rejection_keys: set[tuple] = set()
+
         # Market quality gates
         self.max_spread            = _env_float("SIGNAL_MAX_SPREAD", 0.04)
         self.max_mid_disagreement  = _env_float("SIGNAL_MAX_MID_DISAGREEMENT", 0.08)
@@ -124,80 +170,117 @@ class SignalEngine:
             os.makedirs("data", exist_ok=True)
             with open(self.shadow_log_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["ts", "game_time", "trigger", "side", "token_id", "nw_diff", "mid", "fair", "edge", "action"])
+                writer.writerow(["ts", "game_time", "trigger", "trigger_strength", "side", "token_id", "nw_diff", "mid", "fair", "edge", "action"])
 
-    def _log_shadow(self, game_time, trigger, side, token_id, nw_diff, mid, fair, edge, action):
+    def _log_shadow(self, game_time, trigger, trigger_strength, side, token_id, nw_diff, mid, fair, edge, action):
         with open(self.shadow_log_path, "a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([time.time(), game_time, trigger, side, token_id, nw_diff, mid, fair, edge, action])
+            writer.writerow([time.time(), game_time, trigger, trigger_strength, side, token_id, nw_diff, mid, fair, edge, action])
 
-    def classify(self, f: Dict[str, Any]) -> str:
-        """Label this game-state snapshot with a trigger type."""
-        score_60   = abs(float(f.get("score_change_60s", 0.0)))
-        nw_60      = abs(float(f.get("nw_change_60s", 0.0)))
-        bldg       = int(f.get("building_change_60s", 0))
-        game_min   = float(f.get("game_time", 0.0)) / 60.0
-        market_60  = abs(float(f.get("market_change_60s", 0.0)))
+    def _reject(self, f: Dict[str, Any], reason: str, trigger: str = "", side: str = "",
+                trigger_strength: str = "", expected_move: Optional[float] = None,
+                fair: Optional[float] = None, edge: Optional[float] = None,
+                edge_floor: Optional[float] = None) -> None:
+        """Store a throttled rejection record for DB logging by the strategy loop."""
+        match_key = str(f.get("match_key", ""))
+        game_minute = int(float(f.get("game_time", 0.0)) // 60)
+        key = (match_key, game_minute, str(trigger or "").upper(), reason)
+        should_log = key not in self._last_rejection_keys
+        if should_log:
+            self._last_rejection_keys.add(key)
+            if len(self._last_rejection_keys) > 2000:
+                self._last_rejection_keys.clear()
+        self.last_rejection = {
+            "should_log": should_log,
+            "reason": reason,
+            "trigger": normalize_trigger(trigger),
+            "trigger_strength": str(trigger_strength or "").upper(),
+            "side": side,
+            "match_key": match_key,
+            "game_time": float(f.get("game_time", 0.0)),
+            "mid": float(f.get("mid", 0.0)),
+            "spread": float(f.get("spread", 1.0)),
+            "combined_mid_disagreement": float(f.get("combined_mid_disagreement", 0.0)),
+            "expected_move": expected_move,
+            "fair_price": fair,
+            "edge": edge,
+            "edge_floor": edge_floor,
+        }
 
-        # Dynamic NW threshold: 2,000 at 15 min, +100/min thereafter
+    def classify(self, f: Dict[str, Any]) -> Dict[str, Any]:
+        """Classify this snapshot with a non-overlapping trigger family.
+
+        Returns a dict with trigger, strength, window, and market_state.
+        """
+        score_60 = abs(float(f.get("score_change_60s", 0.0)))
+        nw_60 = abs(float(f.get("nw_change_60s", 0.0)))
+        bldg = int(f.get("building_change_60s", 0))
+        game_min = float(f.get("game_time", 0.0)) / 60.0
+        market_60 = abs(float(f.get("market_change_60s", 0.0)))
+
+        # Dynamic NW threshold: 2,000 at 15 min, +100/min thereafter.
         nw_thresh = 2000 + max(0.0, game_min - 15) * 100
 
-        # ── 3. Stricter Latency & Momentum Taxonomy ──
         score_10s_raw = float(f.get("score_change_10s", 0.0))
         nw_10s_raw = float(f.get("nw_change_10s", 0.0))
         market_10s_raw = float(f.get("market_change_10s", 0.0))
-        
         score_10s = abs(score_10s_raw)
         nw_10s = abs(nw_10s_raw)
-        strong_shock = score_10s >= 2 and nw_10s >= 2000
-        
-        shock_dir = 0
-        if score_10s_raw > 0 or nw_10s_raw > 0: shock_dir = 1
-        elif score_10s_raw < 0 or nw_10s_raw < 0: shock_dir = -1
 
-        # M_STRONG_CONFIRM: Shock + Market Confirmation (1-5 cents) in same direction
+        # Directional shock only when score and radiant_lead agree.
+        if score_10s_raw > 0 and nw_10s_raw > 0:
+            shock_dir = 1
+        elif score_10s_raw < 0 and nw_10s_raw < 0:
+            shock_dir = -1
+        else:
+            shock_dir = 0
+
+        strong_shock = shock_dir != 0 and score_10s >= 2 and nw_10s >= 2000
+        market_flat = abs(market_10s_raw) < 0.01
         market_confirmed = (
             (shock_dir == 1 and 0.01 <= market_10s_raw <= 0.05) or
             (shock_dir == -1 and -0.05 <= market_10s_raw <= -0.01)
         )
+
         if strong_shock and market_confirmed:
-            return "M_STRONG_CONFIRM"
+            return {"trigger": Trigger.MARKET_CONFIRM, "strength": "STRONG", "window": "10s", "market_state": "CONFIRMING"}
 
-        # L_STRONG_GAP: Dead Gap (Market < 1 cent)
-        is_market_flat = abs(market_10s_raw) < 0.01
-        if is_market_flat:
+        if market_flat:
             if strong_shock:
-                return "L_STRONG_GAP"
-            # Fallbacks
-            if score_10s >= 2: return "L_FIGHT_GAP"
-            # ECON DISABLED (TOXIC)
-            if bldg == 1: return "L_STRUCTURAL_GAP"
-            
-            # L_LEAD_FLIP_GAP
-            old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
+                return {"trigger": Trigger.FIGHT_GAP, "strength": "STRONG", "window": "10s", "market_state": "FLAT"}
+            if score_10s >= 2:
+                # Conservative live-probe behavior: do not execute fight gaps when
+                # kill direction and radiant_lead movement disagree or lead movement
+                # is flat/unknown. These are explicitly labeled so rejection logs can
+                # show how often the bot skipped conflicted fight states.
+                if shock_dir != 0:
+                    return {"trigger": Trigger.FIGHT_GAP, "strength": "NORMAL", "window": "10s", "market_state": "FLAT"}
+                return {"trigger": Trigger.FIGHT_EVENT, "strength": "CONFLICTED", "window": "10s", "market_state": "FLAT"}
+
+            old_lead_10s = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_10s", 0.0))
             new_lead = float(f.get("nw_diff", 0.0))
-            if old_lead * new_lead < 0 and abs(new_lead) > 2000:
-                return "L_LEAD_FLIP_GAP"
+            if old_lead_10s * new_lead < 0 and abs(new_lead) > 2000:
+                return {"trigger": Trigger.LEAD_FLIP_GAP, "strength": "NORMAL", "window": "10s", "market_state": "FLAT"}
 
-        # ── 4. Traditional Taxonomy (Underreaction) ──
-        old_lead = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
+            if bldg == 1:
+                return {"trigger": Trigger.STRUCTURE_GAP, "strength": "NORMAL", "window": "60s", "market_state": "FLAT"}
+
+        # Research/event labels. These are not enabled in the default live-probe config.
+        old_lead_60s = float(f.get("nw_diff", 0.0)) - float(f.get("nw_change_60s", 0.0))
         new_lead = float(f.get("nw_diff", 0.0))
-        
+
         if market_60 >= 0.05 and score_60 == 0 and nw_60 < 1000:
-            return Trigger.OVERREACTION
-        
-        if old_lead * new_lead < 0 and nw_60 >= nw_thresh:
-            return Trigger.LEAD_FLIP
-
+            return {"trigger": Trigger.OVERREACTION, "strength": "NORMAL", "window": "60s", "market_state": "MOVED"}
+        if old_lead_60s * new_lead < 0 and nw_60 >= nw_thresh:
+            return {"trigger": Trigger.LEAD_FLIP_EVENT, "strength": "NORMAL", "window": "60s", "market_state": "MOVED"}
         if bldg == 1:
-            return Trigger.STRUCTURAL_SWING
+            return {"trigger": Trigger.STRUCTURE_EVENT, "strength": "NORMAL", "window": "60s", "market_state": "MOVED"}
         if nw_60 >= nw_thresh and score_60 >= 2:
-            return Trigger.FIGHT
-        # ECON IS DISABLED (TOXIC)
+            return {"trigger": Trigger.FIGHT_EVENT, "strength": "STRONG", "window": "60s", "market_state": "MOVED"}
         if score_60 >= 2:
-            return Trigger.KILL_EVENT
+            return {"trigger": Trigger.FIGHT_EVENT, "strength": "NORMAL", "window": "60s", "market_state": "MOVED"}
 
-        return Trigger.SLOW_BLEED
+        return {"trigger": Trigger.SLOW_BLEED, "strength": "NORMAL", "window": "60s", "market_state": "QUIET"}
 
     def predict_win_prob(self, f: Dict[str, Any]) -> float:
         if not self.ort_session:
@@ -231,11 +314,17 @@ class SignalEngine:
     def reset_match(self, match_key: str) -> None:
         self._last_signal_state.pop(match_key, None)
 
-    def generate(self, f: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def generate(self, f: Dict[str, Any], has_open_orders: bool = True) -> Optional[Dict[str, Any]]:
+        self.last_rejection = None
+
         # ── 1. Quality ──
         spread = float(f.get("spread", 1.0))
-        if spread > self.max_spread: return None
-        if float(f.get("combined_mid_disagreement", 0.0)) > self.max_mid_disagreement: return None
+        if spread > self.max_spread:
+            self._reject(f, "SPREAD_TOO_WIDE")
+            return None
+        if float(f.get("combined_mid_disagreement", 0.0)) > self.max_mid_disagreement:
+            self._reject(f, "BOOKS_DISAGREE")
+            return None
 
         # ── 2. Dedup ──
         match_key = str(f.get("match_key", ""))
@@ -246,16 +335,45 @@ class SignalEngine:
         # if last_min == game_minute: return None
 
         # ── 3. Trigger ──
-        trigger = self.classify(f)
-        if trigger in BLOCKED_TRIGGERS: return None
+        classification = self.classify(f)
+        trigger = normalize_trigger(classification.get("trigger"))
+        trigger_strength = str(classification.get("strength") or "NORMAL").upper()
+        trigger_window = str(classification.get("window") or "").lower()
+        market_state = str(classification.get("market_state") or "").upper()
+        if trigger == Trigger.FIGHT_EVENT and trigger_strength == "CONFLICTED":
+            self._reject(f, "CONFLICTED_FIGHT_GAP", trigger=trigger, trigger_strength=trigger_strength)
+            return None
+        if trigger in self.blocked_triggers:
+            self._reject(f, "BLOCKED_TRIGGER", trigger=trigger, trigger_strength=trigger_strength)
+            return None
 
         # ── 4. Edge ──
         mid = float(f.get("mid", 0.5))
+        game_time = float(f.get("game_time", 0.0))
+        
+        # Recommendation 1: Time-Weighted Lead Sensitivity
+        time_decay = 1.0 / (1.0 + (game_time / 2400.0)) 
+
+        # Calculate Combat Shock Index (High velocity + High acceleration)
+        velocity = float(f.get("nw_velocity", 0.0))
+        acceleration = float(f.get("nw_acceleration", 0.0))
+        combat_shock = 1.0
+        if abs(velocity) > 150 and abs(acceleration) > 10:
+            combat_shock = 1.25 
+
+        # Recommendation 4: Snowball Filter (Peak Detection)
+        # Instead of blocking, we flag it so RiskEngine can scale down the position size.
+        is_snowball_climbing = False
+        if abs(acceleration) > 20:
+            if (velocity > 0 and acceleration > 0) or (velocity < 0 and acceleration < 0):
+                is_snowball_climbing = True
+
         if self.ort_session:
-            expected = self.predict_win_prob(f) - mid
+            # ML model already sees game_time, but heuristics benefit from explicit decay
+            expected = (self.predict_win_prob(f) - mid) * combat_shock
             signal_type = "ML_PREDICTION"
         else:
-            expected = self._heuristic_expected_move(f)
+            expected = self._heuristic_expected_move(f) * combat_shock * time_decay
             signal_type = trigger
 
         # Latency Bump: If it's a DOTA_SPIKE_LATENCY, the ML model (which uses 60s features)
@@ -264,7 +382,9 @@ class SignalEngine:
             bump = 0.03 if expected > 0 else -0.03
             expected += bump
 
-        if abs(expected) < self.min_expected_move: return None
+        if abs(expected) < self.min_expected_move:
+            self._reject(f, "EXPECTED_MOVE_TOO_SMALL", trigger=trigger, trigger_strength=trigger_strength, expected_move=expected)
+            return None
 
         # Executable edge calculation (Aggressive Maker Mode: Bid + 0.001)
         side = "RADIANT" if expected > 0 else "DIRE"
@@ -274,7 +394,8 @@ class SignalEngine:
         edge = fair - entry
         
         # ── 5. Log Shadow (Reduced Noise) ──
-        edge_floor = TRIGGER_EDGE_FLOORS.get(trigger, self.min_edge)
+        # Global min edge is a hard floor; trigger floors can only make it stricter.
+        edge_floor = max(self.min_edge, self.trigger_edge_floors.get(trigger, self.min_edge))
         
         # Only log if this is a new minute/trigger/side for this match
         shadow_key = (match_key, game_minute, trigger, side)
@@ -283,20 +404,25 @@ class SignalEngine:
         
         if shadow_key not in self._last_shadow_keys:
             token_id = f.get("radiant_token_id" if expected > 0 else "dire_token_id", "0x")
-            self._log_shadow(f.get("game_time"), trigger, side, token_id, f.get("nw_diff", 0.0), 
+            self._log_shadow(f.get("game_time"), trigger, trigger_strength, side, token_id, f.get("nw_diff", 0.0), 
                              mid, fair, edge, "FIRE" if edge_floor <= edge <= MAX_EDGE else "REJECT_EDGE")
             self._last_shadow_keys.add(shadow_key)
             # Cleanup old keys to prevent memory leak
             if len(self._last_shadow_keys) > 1000:
                 self._last_shadow_keys.clear()
 
-        if not (edge_floor <= edge <= MAX_EDGE):
+        if edge < edge_floor:
+            self._reject(f, "EDGE_TOO_SMALL", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor)
+            return None
+        if edge > MAX_EDGE:
+            self._reject(f, "EDGE_TOO_LARGE", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor)
             return None
 
         # Intra-minute Momentum Check:
-        # If we already fired in this minute, only fire again if fair price moved > 3%
-        if last_min == game_minute:
+        # If we already fired in this minute, only fire again if fair price moved > 3% or we have no open orders (Persistence Mode)
+        if last_min == game_minute and has_open_orders:
             if abs(fair - last_fair) < 0.03:
+                self._reject(f, "INTRA_MINUTE_MOMENTUM_TOO_SMALL", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor)
                 return None
 
         # ── 5. Regime Detection (Snowball Guard) ──
@@ -312,10 +438,14 @@ class SignalEngine:
         return {
             "side": "BUY_RADIANT_YES" if expected > 0 else "BUY_DIRE_YES",
             "trigger": trigger,
+            "trigger_strength": trigger_strength,
+            "trigger_window": trigger_window,
+            "market_state": market_state,
             "signal_type": signal_type,
             "expected_move": expected,
             "fair_price": fair,
             "edge": edge,
             "entry_price_target": entry,
-            "is_snowball_regime": is_snowball
+            "is_snowball_regime": is_snowball,
+            "is_snowball_climbing": is_snowball_climbing
         }

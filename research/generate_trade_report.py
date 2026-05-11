@@ -5,7 +5,7 @@ import onnxruntime as ort
 import os
 
 def generate_report():
-    conn = sqlite3.connect("../data/dota_poly_collection.sqlite")
+    conn = sqlite3.connect("./data/dota_poly_collection.sqlite")
     dota_df = pd.read_sql_query("SELECT ts_ms, match_key, game_time, nw_diff, radiant_score, dire_score, radiant_score - dire_score AS score_diff FROM dota_ticks ORDER BY ts_ms", conn)
     market_df = pd.read_sql_query("SELECT ts_ms, mid, spread FROM market_ticks WHERE token_id = 'COMBINED_RADIANT' ORDER BY ts_ms", conn)
     
@@ -21,7 +21,7 @@ def generate_report():
     
     df = df.dropna()
     
-    session = ort.InferenceSession("dota_xgboost.onnx")
+    session = ort.InferenceSession("./research/dota_xgboost.onnx")
     input_name = session.get_inputs()[0].name
     
     signals = []

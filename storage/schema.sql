@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS signals (
     side TEXT,
     signal_type TEXT,
     trigger TEXT,
+    trigger_strength TEXT,
+    trigger_window TEXT,
+    market_state TEXT,
     fair_price REAL,
     game_time REAL,
     nw_change_10s REAL DEFAULT 0,
@@ -108,3 +111,66 @@ CREATE TABLE IF NOT EXISTS paper_trades (
 
 CREATE INDEX IF NOT EXISTS idx_paper_trades_signal ON paper_trades(signal_id);
 CREATE INDEX IF NOT EXISTS idx_paper_trades_ts ON paper_trades(ts_ms);
+
+CREATE TABLE IF NOT EXISTS live_order_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts_ms INTEGER NOT NULL,
+    signal_id INTEGER,
+    market_id TEXT,
+    token_id TEXT,
+    exchange_order_id TEXT,
+    event_type TEXT,
+    intended_price REAL,
+    intended_size REAL,
+    filled_size REAL,
+    avg_fill_price REAL,
+    remaining_size REAL,
+    ack_ms INTEGER,
+    fill_ts_ms INTEGER,
+    raw_response TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_live_order_events_order ON live_order_events(exchange_order_id, ts_ms);
+CREATE INDEX IF NOT EXISTS idx_live_order_events_signal ON live_order_events(signal_id, ts_ms);
+
+CREATE TABLE IF NOT EXISTS live_fill_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts_ms INTEGER NOT NULL,
+    exchange_order_id TEXT,
+    signal_id INTEGER,
+    market_id TEXT,
+    token_id TEXT,
+    seconds_after_fill REAL,
+    best_bid REAL,
+    best_ask REAL,
+    mid REAL,
+    spread REAL,
+    bid_depth REAL,
+    ask_depth REAL
+);
+
+CREATE INDEX IF NOT EXISTS idx_live_fill_snapshots_order ON live_fill_snapshots(exchange_order_id, seconds_after_fill);
+
+
+CREATE TABLE IF NOT EXISTS signal_rejections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts_ms INTEGER NOT NULL,
+    match_key TEXT,
+    market_id TEXT,
+    token_id TEXT,
+    trigger TEXT,
+    trigger_strength TEXT,
+    side TEXT,
+    reason TEXT,
+    game_time REAL,
+    mid REAL,
+    spread REAL,
+    combined_mid_disagreement REAL,
+    expected_move REAL,
+    fair_price REAL,
+    edge REAL,
+    edge_floor REAL
+);
+
+CREATE INDEX IF NOT EXISTS idx_signal_rejections_reason ON signal_rejections(reason, trigger, ts_ms);
+CREATE INDEX IF NOT EXISTS idx_signal_rejections_market ON signal_rejections(market_id, ts_ms);

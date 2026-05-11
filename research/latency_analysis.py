@@ -9,7 +9,7 @@ import numpy as np
 import onnxruntime as ort
 
 def analyze_latency():
-    conn = sqlite3.connect("../data/dota_poly_collection.sqlite")
+    conn = sqlite3.connect("./data/dota_poly_collection.sqlite")
     dota_df = pd.read_sql_query(
         "SELECT ts_ms, match_key, game_time, nw_diff, radiant_score, dire_score, "
         "radiant_score - dire_score AS score_diff FROM dota_ticks ORDER BY ts_ms", conn)
@@ -23,7 +23,7 @@ def analyze_latency():
     df['game_minute'] = (df['game_time'] // 60).astype(int)
     df = df.dropna()
 
-    session = ort.InferenceSession("dota_xgboost.onnx")
+    session = ort.InferenceSession("./research/dota_xgboost.onnx")
     input_name = session.get_inputs()[0].name
 
     signals = []
@@ -34,7 +34,7 @@ def analyze_latency():
         prob = float(session.run(None, {input_name: inp})[1][0][1])
         mid = float(row['mid'])
         edge = prob - mid
-        if 0.04 < edge <= 0.09 and float(row['spread']) < 0.04:
+        if abs(edge) > 0.02 and float(row['spread']) < 0.15:
             signals.append({
                 'ts_ms': row['ts_ms'],
                 'match_key': row['match_key'],
@@ -46,6 +46,10 @@ def analyze_latency():
                 'entry_mid': mid,
                 'edge': edge
             })
+
+    if not signals:
+        print("No signals found with current thresholds.")
+        return
 
     sig_df = pd.DataFrame(signals)
     sig_df = sig_df.sort_values('ts_ms').drop_duplicates(

@@ -1,0 +1,11 @@
+[02:30:38] Using 
+market_id=0x5d4403c3764b4efcae780ce26e07183bd6cc6b1256c8694d71328f7f7b8220ed
+[02:30:38] Radiant token=4011673209... Dire token=9581179841...
+[SignalEngine] XGBoost ONNX model loaded.
+[02:30:38] DRY RUN MODE ENABLED.
+[02:30:38] Starting Dota loop...
+[02:30:38] Starting Strategy loop...
+[02:30:38] Enabled triggers: FIGHT_GAP,LEAD_FLIP_GAP,MARKET_CONFIRM
+[02:30:38] Blocked triggers: NONE
+[02:30:38] Trigger minute windows: FIGHT_GAP:8-45m, LEAD_FLIP_GAP:12-40m, 
+MARKET_CONFIRM:10-45m, SLOW_BLEED:15-35m, STRUCTURE_GAP:10-45m

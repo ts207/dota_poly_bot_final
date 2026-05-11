@@ -176,10 +176,16 @@ class DotaFastFeed:
                 self._last_found_print_s = now_s
 
             lead = float(target_game.get("radiant_lead", 0) or 0)
+            
+            radiant_wins = int(target_game.get("radiant_series_wins", 0) or 0)
+            dire_wins = int(target_game.get("dire_series_wins", 0) or 0)
+            map_num = radiant_wins + dire_wins + 1
+            base_key = str(target_game.get("server_steam_id") or target_game.get("lobby_id") or "")
+            match_key = f"{base_key}_m{map_num}" if base_key else ""
 
             tick = {
                 "ts_ms": int(now_s * 1000),
-                "match_key": str(target_game.get("server_steam_id") or target_game.get("lobby_id") or ""),
+                "match_key": match_key,
                 "server_steam_id": str(target_game.get("server_steam_id") or ""),
                 "partner": int(target_game.get("_partner", -1)),
                 "radiant_team": radiant_name,

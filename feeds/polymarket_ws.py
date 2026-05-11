@@ -27,8 +27,11 @@ class PolyMarketBook:
         self.validation_tolerance = validation_tolerance
         self._last_snapshot_s: float = 0.0
         self._session: Optional[aiohttp.ClientSession] = None
+        self._ws: Optional[websockets.WebSocketClientProtocol] = None
 
     async def close(self):
+        if self._ws:
+            await self._ws.close()
         if self._session and not self._session.closed:
             await self._session.close()
 
@@ -38,11 +41,27 @@ class PolyMarketBook:
             self._session = aiohttp.ClientSession(timeout=timeout)
         return self._session
 
+    async def update_assets(self, asset_ids: List[str]):
+        """Update the tracked assets and trigger a reconnect if changed."""
+        new_ids = [str(a) for a in asset_ids]
+        if set(new_ids) == set(self.asset_ids):
+            return
+            
+        print(f"Polymarket WS: Updating assets to {new_ids}")
+        self.asset_ids = new_ids
+        for aid in self.asset_ids:
+            if aid not in self._raw_books:
+                self._raw_books[aid] = {"bids": {}, "asks": {}}
+        
+        if self._ws:
+            await self._ws.close()
+
     async def run(self):
         while True:
             try:
                 await self.refresh_snapshots()
                 async with websockets.connect(self.url, ping_interval=10, ping_timeout=10) as ws:
+                    self._ws = ws
                     sub = {"assets_ids": self.asset_ids, "type": "market"}
                     await ws.send(json.dumps(sub))
                     print(f"Polymarket WS subscribed to {len(self.asset_ids)} assets")
@@ -52,10 +71,13 @@ class PolyMarketBook:
                             await self.refresh_snapshots()
                         event = json.loads(msg)
                         self.handle_event(event)
-
+            except websockets.exceptions.ConnectionClosed:
+                pass
             except Exception as e:
                 print(f"Polymarket WS error: {e}")
                 await asyncio.sleep(1)
+            finally:
+                self._ws = None
 
     async def refresh_snapshots(self):
         """Seed/reconcile local books from CLOB REST `/book` and warn on mismatch."""

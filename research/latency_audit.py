@@ -6,7 +6,7 @@ import os
 
 # Config
 SHADOW_LOG = "/home/irene/dota_poly_bot_final/data/shadow_signals.csv"
-DB_PATH = "/home/irene/dota_poly_bot_final/data/dota_poly_collection.sqlite"
+DB_PATH = "/home/irene/dota_poly_bot_fin./data/dota_poly_collection.sqlite"
 
 def analyze_latency_pnl():
     if not os.path.exists(SHADOW_LOG):

@@ -32,8 +32,8 @@ class RiskEngine:
         now = now_ms if now_ms is not None else int(time.time() * 1000)
 
         if now - int(dota_tick["ts_ms"]) > self.max_dota_tick_age_ms:
-            return False, "STALE_DOTA"
-
+            return False, "STALE_LOCAL_DOTA"
+            
         if now - int(combined_book["ts_ms"]) > self.max_book_age_ms:
             return False, "STALE_COMBINED_BOOK"
 
@@ -43,8 +43,13 @@ class RiskEngine:
         if abs(current_exposure) >= self.max_position_per_match:
             return False, "EXPOSURE_LIMIT"
 
-        if float(execution_book.get("spread", 1.0)) > self.max_spread:
+        spread = float(execution_book.get("spread", 1.0))
+        if spread > self.max_spread:
             return False, "EXECUTION_SPREAD_TOO_WIDE"
+            
+        mid = float(combined_book.get("mid", 0.5))
+        if spread > max(0.02, mid * 0.15):
+            return False, "EXECUTION_RELATIVE_SPREAD_TOO_WIDE"
             
         # Exit Liquidity Filter: Ensure there is a bid to sell into later.
         if float(execution_book.get("bid_depth", 0.0)) < self.min_exit_depth:
@@ -77,27 +82,33 @@ class RiskEngine:
         if bid_depth < 50: health *= 0.5
         if float(target_book.get("spread", 1.0)) > 0.02: health *= 0.8
         
-        # V3 Trigger Taxonomy sizing
-        trigger = signal.get("trigger", signal.get("signal_type", "SLOW_BLEED"))
-        
-        if trigger in {None, "", "None"}:
+        # Simplified trigger taxonomy sizing.
+        trigger = str(signal.get("trigger", signal.get("signal_type", "SLOW_BLEED")) or "").upper()
+        strength = str(signal.get("trigger_strength", "NORMAL") or "NORMAL").upper()
+
+        if trigger in {None, "", "NONE"}:
             return 0.0
-        
-        if trigger == "M_STRONG_CONFIRM":
-            # Snowball Regime Guard: only full size if game is a stomp with high volatility
+
+        if trigger == "MARKET_CONFIRM":
+            # Confirmation fills can be late/adverse-selected; size tiny unless snowball regime.
             is_snowball = signal.get("is_snowball_regime", False)
             multiplier = 1.0 * health if is_snowball else 0.1 * health
-        elif trigger in {"LEAD_FLIP", "STRUCTURAL_SWING", "L_FIGHT_GAP", "L_LEAD_FLIP_GAP", "FIGHT"}:
-            multiplier = 0.5 * health
-        elif trigger in {"L_STRONG_GAP", "SLOW_BLEED", "KILL_EVENT"}:
-            multiplier = 0.2 * health
-        elif trigger in {"OVERREACTION", "ML_PREDICTION"}:
-            multiplier = 0.5 * health
+        elif trigger == "FIGHT_GAP":
+            multiplier = (0.35 if strength == "STRONG" else 0.20) * health
+        elif trigger == "LEAD_FLIP_GAP":
+            multiplier = 0.35 * health
+        elif trigger == "STRUCTURE_GAP":
+            multiplier = 0.25 * health
+        elif trigger in {"OVERREACTION", "FIGHT_EVENT", "LEAD_FLIP_EVENT", "STRUCTURE_EVENT", "SLOW_BLEED", "ML_PREDICTION"}:
+            multiplier = 0.1 * health
         else:
             multiplier = 0.1 * health
         
         # Risk Cap: Never more than 5% of bankroll per trade
         size = self.max_order_size * multiplier
+
+        if signal.get("is_snowball_climbing", False):
+            size *= 0.5  # Scale down by 50% during high acceleration (Snowball)
 
         if remaining_capacity is not None:
             size = min(size, max(0.0, remaining_capacity))

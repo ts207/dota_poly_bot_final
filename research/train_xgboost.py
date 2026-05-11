@@ -48,7 +48,7 @@ def extract_features(db_path):
     return X, y, features
 
 def train_and_export():
-    db_path = '../data/dota_poly_collection.sqlite'
+    db_path = './data/dota_poly_collection.sqlite'
     X, y, feature_names = extract_features(db_path)
     
     if X.empty:
@@ -83,7 +83,7 @@ def train_and_export():
         target_opset=12
     )
     
-    model_path_onnx = 'dota_xgboost.onnx'
+    model_path_onnx = './research/dota_xgboost.onnx'
     with open(model_path_onnx, "wb") as f:
         f.write(onnx_model.SerializeToString())
     print(f"Saved ONNX model to {model_path_onnx}")

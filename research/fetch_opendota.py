@@ -116,7 +116,7 @@ def process_match(match, conn):
 
 def main():
     parser = argparse.ArgumentParser(description="Gather historical Dota 2 data from OpenDota")
-    parser.add_argument("--db", type=str, default="../data/dota_poly_collection.sqlite", help="Path to SQLite DB")
+    parser.add_argument("--db", type=str, default="./data/dota_poly_collection.sqlite", help="Path to SQLite DB")
     parser.add_argument("--limit", type=int, default=50, help="Number of matches to process")
     args = parser.parse_args()
     

@@ -1,0 +1,446 @@
+Total candidate markets found: 445
+  Dota 2: PlayTime vs Nigma Galaxy (BO3) - 1win Essence Playoffs | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10
+  Dota 2: 1win vs PARIVISION - Game 2 Winner | ['1win', 'PARIVISION'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2
+  Dota 2: PlayTime vs Nigma Galaxy - Game 2 Winner | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2
+  Dota 2: PlayTime vs Yellow Submarine (BO3) - 1win Essence Playoffs | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10
+  Dota 2: PlayTime vs Nigma Galaxy - Game 1 Winner | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1
+  Dota 2: REKONIX vs Nigma Galaxy - Game 1 Winner | ['REKONIX', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1
+  Dota 2: REKONIX vs Nigma Galaxy - Game 2 Winner | ['REKONIX', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2
+  Dota 2: PlayTime vs Yellow Submarine - Game 1 Winner | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1
+  Dota 2: PlayTime vs Yellow Submarine - Game 2 Winner | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2
+  Dota 2: 1win vs PARIVISION - Game 1 Winner | ['1win', 'PARIVISION'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1
+  Dota 2: 1win vs PARIVISION (BO3) - 1win Essence Playoffs | ['1win', 'PARIVISION'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10
+  Dota 2: REKONIX vs Nigma Galaxy (BO3) - 1win Essence Playoffs | ['REKONIX', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10
+  Game Handicap: PARI (-1.5) vs 1win (+1.5) | ['PARIVISION', '1win'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game-handicap-home-1pt5
+  Games Total: O/U 2.5 | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-total-games-2pt5
+  Game Handicap: NGX (-1.5) vs REKONIX (+1.5) | ['Nigma Galaxy', 'REKONIX'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game-handicap-home-1pt5
+  Game Handicap: PlayTime (-1.5) vs Yellow Submarine (+1.5) | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game-handicap-away-1pt5
+  Games Total: O/U 2.5 | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-total-games-2pt5
+  Games Total: O/U 2.5 | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-total-games-2pt5
+  Game Handicap: PlayTime (-1.5) vs Nigma Galaxy (+1.5) | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game-handicap-away-1pt5
+  Total Kills Over/Under 61.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-61pt5
+  Total Kills Over/Under 76.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-76pt5
+  Total Kills Over/Under 63.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-63pt5
+  Total Kills Over/Under 65.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-65pt5
+  First Blood in Game 2? | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-first-blood
+  First Blood in Game 2? | ['1win', 'PARIVISION'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-first-blood
+  Total Kills Over/Under 52.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-52pt5
+  Games Total: O/U 2.5 | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-total-games-2pt5
+  Total Kills Over/Under 64.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-64pt5
+  Total Kills Over/Under 69.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-69pt5
+  Total Kills Over/Under 68.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-68pt5
+  Total Kills Over/Under 35.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-35pt5
+  Total Kills Over/Under 34.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-34pt5
+  Total Kills Over/Under 33.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-33pt5
+  Total Kills Over/Under 67.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-67pt5
+  Game Handicap: YeS (-1.5) vs PlayTime (+1.5) | ['Yellow Submarine', 'PlayTime'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game-handicap-home-1pt5
+  Total Kills Over/Under 59.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-59pt5
+  Total Kills Over/Under 58.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-58pt5
+  Game Handicap: RNX (-1.5) vs Nigma Galaxy (+1.5) | ['REKONIX', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game-handicap-away-1pt5
+  Total Kills Over/Under 65.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-65pt5
+  Total Kills Over/Under 70.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-70pt5
+  Total Kills Over/Under 62.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-62pt5
+  Total Kills Over/Under 71.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-71pt5
+  Total Kills Over/Under 66.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-66pt5
+  First Blood in Game 1? | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-first-blood
+  Total Kills Over/Under 47.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-47pt5
+  Total Kills Over/Under 48.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-48pt5
+  Total Kills Over/Under 68.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-68pt5
+  First Blood in Game 2? | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-first-blood
+  First Blood in Game 1? | ['1win', 'PARIVISION'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-first-blood
+  Total Kills Over/Under 82.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-82pt5
+  Total Kills Over/Under 47.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-47pt5
+  Total Kills Over/Under 47.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-47pt5
+  Total Kills Over/Under 48.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-48pt5
+  Total Kills Over/Under 46.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-46pt5
+  Total Kills Over/Under 44.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-44pt5
+  Total Kills Over/Under 45.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-45pt5
+  Total Kills Over/Under 43.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-43pt5
+  Total Kills Over/Under 41.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-41pt5
+  Total Kills Over/Under 42.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-42pt5
+  Total Kills Over/Under 56.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-56pt5
+  Total Kills Over/Under 62.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-62pt5
+  Total Kills Over/Under 58.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-58pt5
+  Total Kills Over/Under 57.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-57pt5
+  Total Kills Over/Under 56.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-56pt5
+  Total Kills Over/Under 60.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-60pt5
+  Total Kills Over/Under 61.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-61pt5
+  Total Kills Over/Under 59.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-59pt5
+  Total Kills Over/Under 59.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-59pt5
+  Total Kills Over/Under 58.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-58pt5
+  Total Kills Over/Under 60.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-60pt5
+  Total Kills Over/Under 57.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-57pt5
+  Total Kills Over/Under 61.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-61pt5
+  Total Kills Over/Under 63.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-63pt5
+  Total Kills Over/Under 62.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-62pt5
+  Total Kills Over/Under 48.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-48pt5
+  First Blood in Game 1? | ['REKONIX', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-first-blood
+  Total Kills Over/Under 46.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-46pt5
+  Total Kills Over/Under 64.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-64pt5
+  First Blood in Game 3? | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-first-blood
+  Total Kills Over/Under 65.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-65pt5
+  Total Kills Over/Under 66.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-66pt5
+  Total Kills Over/Under 67.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-67pt5
+  Total Kills Over/Under 69.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-69pt5
+  Total Kills Over/Under 68.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-68pt5
+  Total Kills Over/Under 70.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-70pt5
+  Total Kills Over/Under 72.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-72pt5
+  Total Kills Over/Under 73.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-73pt5
+  Total Kills Over/Under 71.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-71pt5
+  Total Kills Over/Under 74.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-74pt5
+  Total Kills Over/Under 75.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-75pt5
+  Total Kills Over/Under 54.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-54pt5
+  Total Kills Over/Under 55.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-55pt5
+  Total Kills Over/Under 54.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-54pt5
+  Total Kills Over/Under 55.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-55pt5
+  Total Kills Over/Under 79.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-79pt5
+  Total Kills Over/Under 81.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-81pt5
+  Total Kills Over/Under 80.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-80pt5
+  Total Kills Over/Under 78.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-78pt5
+  Total Kills Over/Under 63.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-63pt5
+  Total Kills Over/Under 52.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-52pt5
+  Total Kills Over/Under 50.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-50pt5
+  Total Kills Over/Under 64.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-64pt5
+  Total Kills Over/Under 65.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-65pt5
+  Total Kills Over/Under 67.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-67pt5
+  Total Kills Over/Under 68.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-68pt5
+  Total Kills Over/Under 66.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-66pt5
+  Total Kills Over/Under 55.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-55pt5
+  Total Kills Over/Under 57.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-57pt5
+  Total Kills Over/Under 56.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-56pt5
+  Total Kills Over/Under 59.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-59pt5
+  Game 1: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-both-teams-beat-roshan
+  Game 2: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-both-teams-beat-roshan
+  Game 2: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-both-teams-destroy-barracks
+  Game 2: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-any-player-ultra-kill
+  Game 2: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-any-player-rampage
+  Total Kills Over/Under 77.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-77pt5
+  Game 1: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-ends-in-daytime
+  Game 1: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-any-player-ultra-kill
+  Game 1: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-any-player-rampage
+  Game 2: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-ends-in-daytime
+  Game 1: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-both-teams-destroy-barracks
+  Total Kills Over/Under 67.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-67pt5
+  Total Kills Over/Under 49.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-49pt5
+  Total Kills Over/Under 50.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-50pt5
+  Total Kills Over/Under 49.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-49pt5
+  Total Kills Over/Under 42.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-42pt5
+  Total Kills Over/Under 41.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-41pt5
+  Total Kills Over/Under 38.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-38pt5
+  Total Kills Over/Under 37.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-37pt5
+  Total Kills Over/Under 36.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-36pt5
+  Total Kills Over/Under 39.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-39pt5
+  Total Kills Over/Under 40.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-40pt5
+  Total Kills Over/Under 50.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-50pt5
+  Total Kills Over/Under 51.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-51pt5
+  Total Kills Over/Under 52.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-52pt5
+  Total Kills Over/Under 53.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-53pt5
+  Total Kills Over/Under 54.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-54pt5
+  Total Kills Over/Under 59.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-59pt5
+  Total Kills Over/Under 60.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-60pt5
+  Total Kills Over/Under 58.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-58pt5
+  Total Kills Over/Under 57.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-57pt5
+  Total Kills Over/Under 56.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-56pt5
+  Total Kills Over/Under 55.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-55pt5
+  Total Kills Over/Under 66.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-66pt5
+  Total Kills Over/Under 64.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-64pt5
+  Total Kills Over/Under 58.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-58pt5
+  Total Kills Over/Under 57.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-57pt5
+  Total Kills Over/Under 56.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-56pt5
+  Total Kills Over/Under 55.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-55pt5
+  Total Kills Over/Under 54.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-54pt5
+  Total Kills Over/Under 53.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-53pt5
+  Total Kills Over/Under 52.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-52pt5
+  Total Kills Over/Under 52.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-52pt5
+  Total Kills Over/Under 53.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-53pt5
+  Total Kills Over/Under 61.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-61pt5
+  Total Kills Over/Under 63.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-63pt5
+  Total Kills Over/Under 62.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-62pt5
+  Total Kills Over/Under 60.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-60pt5
+  Total Kills Over/Under 59.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-59pt5
+  Total Kills Over/Under 44.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-44pt5
+  Total Kills Over/Under 54.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-54pt5
+  Total Kills Over/Under 57.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-57pt5
+  Total Kills Over/Under 56.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-56pt5
+  Total Kills Over/Under 55.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-55pt5
+  Total Kills Over/Under 43.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-43pt5
+  Total Kills Over/Under 40.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-40pt5
+  Total Kills Over/Under 41.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-41pt5
+  Total Kills Over/Under 45.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-45pt5
+  Total Kills Over/Under 54.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-54pt5
+  Total Kills Over/Under 55.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-55pt5
+  Total Kills Over/Under 59.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-59pt5
+  Total Kills Over/Under 63.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-63pt5
+  Total Kills Over/Under 56.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-56pt5
+  Total Kills Over/Under 58.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-58pt5
+  Total Kills Over/Under 57.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-57pt5
+  Total Kills Over/Under 60.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-60pt5
+  Total Kills Over/Under 62.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-62pt5
+  Total Kills Over/Under 64.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-64pt5
+  Total Kills Over/Under 61.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-61pt5
+  Total Kills Over/Under 54.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-54pt5
+  Total Kills Over/Under 53.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-53pt5
+  Total Kills Over/Under 67.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-67pt5
+  Total Kills Over/Under 71.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-71pt5
+  Total Kills Over/Under 69.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-69pt5
+  Total Kills Over/Under 65.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-65pt5
+  Total Kills Over/Under 70.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-70pt5
+  Total Kills Over/Under 66.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-66pt5
+  Total Kills Over/Under 68.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-68pt5
+  Total Kills Over/Under 58.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-58pt5
+  Total Kills Over/Under 60.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-60pt5
+  Total Kills Over/Under 61.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-61pt5
+  Total Kills Over/Under 64.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-64pt5
+  Total Kills Over/Under 62.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-62pt5
+  Total Kills Over/Under 63.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-63pt5
+  Total Kills Over/Under 66.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-66pt5
+  Total Kills Over/Under 65.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-65pt5
+  Total Kills Over/Under 67.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-67pt5
+  Total Kills Over/Under 69.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-69pt5
+  Total Kills Over/Under 68.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-68pt5
+  Total Kills Over/Under 71.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-71pt5
+  Total Kills Over/Under 75.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-75pt5
+  Total Kills Over/Under 74.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-74pt5
+  Total Kills Over/Under 72.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-72pt5
+  Total Kills Over/Under 73.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-73pt5
+  Total Kills Over/Under 70.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-70pt5
+  Total Kills Over/Under 53.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-53pt5
+  Total Kills Over/Under 52.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-52pt5
+  Game 3: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-any-player-ultra-kill
+  Game 1: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-both-teams-beat-roshan
+  Game 1: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-any-player-rampage
+  First Blood in Game 1? | ['PlayTime', 'Yellow Submarine'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-first-blood
+  Total Kills Over/Under 42.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-42pt5
+  Will Tundra Esports win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-tundra-esports-win-dota-2-pgl-wallachia-2024
+  Will Alliance win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-alliance-win-dota-2-pgl-wallachia-2024
+  Will Natus Vincere win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-natus-vincere-win-dota-2-pgl-wallachia-2024
+  Will Team Falcons win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-team-falcons-win-dota-2-pgl-wallachia-2024
+  Will Nigma Galaxy win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-nigma-galaxy-win-dota-2-pgl-wallachia-2024
+  Will Invictus Gaming win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-invictus-gaming-win-dota-2-pgl-wallachia-2024
+  Will Nouns Esports win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-nouns-esports-win-dota-2-pgl-wallachia-2024
+  Will HEROIC win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-heroic-win-dota-2-pgl-wallachia-2024
+  Will beastcoast win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-beastcoast-win-dota-2-pgl-wallachia-2024
+  Will Infinity win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-infinity-win-dota-2-pgl-wallachia-2024
+  Will AVULUS win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-avulus-win-dota-2-pgl-wallachia-2024
+  Will L1GA TEAM win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-l1ga-team-win-dota-2-pgl-wallachia-2024
+  Will Azure Ray win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-azure-ray-win-dota-2-pgl-wallachia-2024
+  Will another team win Dota 2: PGL Wallachia 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-another-team-win-dota-2-pgl-wallachia-2024
+  Will Team Liquid win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-team-liquid-win-the-international-2024
+  Will Cloud9 win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-cloud9-win-the-international-2024
+  Will Tundra Esports win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-tundra-esports-win-the-international-2024
+  Will Aurora Gaming win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-aurora-gaming-win-the-international-2024
+  Will another team win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-another-team-win-the-international-2024
+  Will Gaimin Gladiators win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-garmin-gladiators-win-the-international-2024
+  Will BB Team win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-bb-team-win-the-international-2024
+  Will Team Falcons win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-team-falcons-win-the-international-2024
+  Will Xtreme Gaming win The International 2024? | ['Yes', 'No'] | https://polymarket.com/market/will-xtreme-gaming-win-the-international-2024
+  Will Team Liquid win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-team-liquid-win-the-blast-slam-iii-tournament
+  Will Tundra Esports win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-tundra-esports-win-the-blast-slam-iii-tournament
+  Will Team Falcons win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-team-falcons-win-the-blast-slam-iii-tournament
+  Will Team Spirit win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-team-spirit-win-the-blast-slam-iii-tournament
+  Will Aurora Gaming win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-aurora-gaming-win-the-blast-slam-iii-tournament
+  Will Xtreme Gaming win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-xtreme-gaming-win-the-blast-slam-iii-tournament
+  Will BetBoom Team win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-betboom-team-win-the-blast-slam-iii-tournament
+  Will Gaimin Gladiators win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-gaimin-gladiators-win-the-blast-slam-iii-tournament
+  Will PARIVISION win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-parivision-win-the-blast-slam-iii-tournament
+  Will Team Tidebound win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-team-tidebound-win-the-blast-slam-iii-tournament
+  Will another team win the BLAST Slam III Tournament? | ['Yes', 'No'] | https://polymarket.com/market/will-another-team-win-the-blast-slam-iii-tournament
+  Will Team Falcons win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-team-falcons-win-blast-slam-vi
+  Will HEROIC win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-heroic-win-blast-slam-vi
+  Will Team Liquid win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-team-liquid-win-blast-slam-vi
+  Will Team Spirit win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-team-spirit-win-blast-slam-vi
+  Will Natus Vincere win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-natus-vincere-win-blast-slam-vi
+  Will REKONIX win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-rekonix-win-blast-slam-vi
+  Will Tundra Esports win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-tundra-esports-win-blast-slam-vi
+  Will MOUZ win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-mouz-win-blast-slam-vi
+  Will Team Yandex win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-team-yandex-win-blast-slam-vi
+  Will OG win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-og-win-blast-slam-vi
+  Will GamerLegion win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-gamerlegion-win-blast-slam-vi
+  Will Xtreme Gaming win Blast Slam VI?  | ['Yes', 'No'] | https://polymarket.com/market/will-xtreme-gaming-win-blast-slam-vi
+  Will another team win Blast Slam VI? | ['Yes', 'No'] | https://polymarket.com/market/will-another-team-win-blast-slam-vi
+  Will Team Spirit win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-team-spirit-win-esl-one-birmingham-2026
+  Will OG win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-og-win-esl-one-birmingham-2026
+  Will Team Falcons win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-team-falcons-win-esl-one-birmingham-2026
+  Will MOUZ win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-mouz-win-esl-one-birmingham-2026
+  Will Nigma Galaxy win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-nigma-galaxy-win-esl-one-birmingham-2026
+  Will Xtreme Gaming win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-xtreme-gaming-win-esl-one-birmingham-2026
+  Will Yakult Brothers win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-yakult-brothers-win-esl-one-birmingham-2026
+  Will GamerLegion win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-gamerlegion-win-esl-one-birmingham-2026
+  Will another team win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-another-team-win-esl-one-birmingham-2026
+  Will Team Yandex win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-team-yandex-win-esl-one-birmingham-2026
+  Will PARIVISION win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-parivision-win-esl-one-birmingham-2026
+  Will Tundra Esports win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-tundra-esports-win-esl-one-birmingham-2026
+  Will Virtus.pro win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-virtuspro-win-esl-one-birmingham-2026
+  Will BetBoom Team win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-betboom-team-win-esl-one-birmingham-2026
+  Will Aurora Gaming win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-aurora-gaming-win-esl-one-birmingham-2026
+  Will REKONIX win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-rekonix-win-esl-one-birmingham-2026
+  Will paiN Gaming win ESL One Birmingham 2026? | ['Yes', 'No'] | https://polymarket.com/market/will-pain-gaming-win-esl-one-birmingham-2026
+  Total Kills Over/Under 47.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-47pt5
+  Total Kills Over/Under 46.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-46pt5
+  Total Kills Over/Under 47.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-47pt5
+  Total Kills Over/Under 48.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-48pt5
+  Total Kills Over/Under 50.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-50pt5
+  Total Kills Over/Under 49.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-49pt5
+  First Blood in Game 1? | ['Team Liquid', 'Team Falcons'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-first-blood
+  Total Kills Over/Under 48.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-48pt5
+  Total Kills Over/Under 46.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-46pt5
+  First Blood in Game 2? | ['Team Liquid', 'Team Falcons'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-first-blood
+  Total Kills Over/Under 49.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-49pt5
+  Total Kills Over/Under 50.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-50pt5
+  Dota 2: Team Liquid vs Team Falcons (BO3) - DreamLeague Stage 2 | ['Team Liquid', 'Team Falcons'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23
+  Dota 2: Team Liquid vs Team Falcons - Game 1 Winner | ['Team Liquid', 'Team Falcons'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1
+  Dota 2: Team Liquid vs Team Falcons - Game 2 Winner | ['Team Liquid', 'Team Falcons'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2
+  Games Total: O/U 2.5 | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-total-games-2pt5
+  Game Handicap: Liquid (-1.5) vs Team Falcons (+1.5) | ['Team Liquid', 'Team Falcons'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game-handicap-away-1pt5
+  Total Kills Over/Under 44.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-44pt5
+  Total Kills Over/Under 44.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-44pt5
+  Total Kills Over/Under 59.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-59pt5
+  Total Kills Over/Under 45.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-45pt5
+  Total Kills Over/Under 40.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-40pt5
+  Total Kills Over/Under 43.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-43pt5
+  Total Kills Over/Under 42.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-42pt5
+  Total Kills Over/Under 41.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-41pt5
+  Total Kills Over/Under 39.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-39pt5
+  Total Kills Over/Under 37.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-37pt5
+  Total Kills Over/Under 36.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-36pt5
+  Total Kills Over/Under 38.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-38pt5
+  Total Kills Over/Under 31.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-31pt5
+  Total Kills Over/Under 28.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-28pt5
+  Total Kills Over/Under 27.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-27pt5
+  Total Kills Over/Under 45.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-45pt5
+  Total Kills Over/Under 30.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-30pt5
+  Total Kills Over/Under 29.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game1-kill-over-29pt5
+  Total Kills Over/Under 43.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-43pt5
+  Total Kills Over/Under 55.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-55pt5
+  Total Kills Over/Under 51.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-51pt5
+  Total Kills Over/Under 42.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-42pt5
+  Total Kills Over/Under 40.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-40pt5
+  Total Kills Over/Under 41.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-41pt5
+  Total Kills Over/Under 39.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-39pt5
+  Total Kills Over/Under 38.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-38pt5
+  Total Kills Over/Under 53.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-53pt5
+  Total Kills Over/Under 52.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-52pt5
+  Total Kills Over/Under 56.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-56pt5
+  Total Kills Over/Under 64.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-64pt5
+  Total Kills Over/Under 61.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-61pt5
+  Total Kills Over/Under 60.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-60pt5
+  Total Kills Over/Under 58.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-58pt5
+  Total Kills Over/Under 62.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-62pt5
+  Total Kills Over/Under 63.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-63pt5
+  Total Kills Over/Under 54.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-54pt5
+  Total Kills Over/Under 65.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-65pt5
+  Total Kills Over/Under 57.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-57pt5
+  Total Kills Over/Under 66.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-66pt5
+  Total Kills Over/Under 67.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-67pt5
+  Total Kills Over/Under 69.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-69pt5
+  Total Kills Over/Under 68.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-liquid-flc-2026-02-23-game2-kill-over-68pt5
+  Total Kills Over/Under 51.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-51pt5
+  Total Kills Over/Under 51.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-kill-over-51pt5
+  Total Kills Over/Under 52.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-52pt5
+  Total Kills Over/Under 50.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-kill-over-50pt5
+  Total Kills Over/Under 49.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-kill-over-49pt5
+  Total Kills Over/Under 53.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-53pt5
+  Total Kills Over/Under 53.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-53pt5
+  Total Kills Over/Under 49.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-49pt5
+  Total Kills Over/Under 53.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-kill-over-53pt5
+  Total Kills Over/Under 51.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-51pt5
+  Total Kills Over/Under 49.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game1-kill-over-49pt5
+  Total Kills Over/Under 52.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-kill-over-52pt5
+  Total Kills Over/Under 50.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game2-kill-over-50pt5
+  Game 3: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-any-player-rampage
+  First Blood in Game 3? | ['PlayTime', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-first-blood
+  Game 3: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-ends-in-daytime
+  Game 3: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-both-teams-destroy-barracks
+  Game 3: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-any-player-ultra-kill
+  Game 3: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-ngx-2026-05-10-game3-both-teams-beat-roshan
+  Total Kills Over/Under 46.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-46pt5
+  Total Kills Over/Under 48.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-kill-over-48pt5
+  Total Kills Over/Under 45.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-45pt5
+  Total Kills Over/Under 44.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-44pt5
+  Total Kills Over/Under 43.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-43pt5
+  Total Kills Over/Under 45.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-45pt5
+  Total Kills Over/Under 47.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-47pt5
+  Total Kills Over/Under 47.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-47pt5
+  Total Kills Over/Under 47.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-kill-over-47pt5
+  Total Kills Over/Under 44.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-44pt5
+  Total Kills Over/Under 43.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-43pt5
+  Game 3: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-both-teams-destroy-barracks
+  Game 3: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-any-player-ultra-kill
+  Game 3: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-any-player-rampage
+  Total Kills Over/Under 48.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-48pt5
+  Total Kills Over/Under 48.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-kill-over-48pt5
+  Total Kills Over/Under 46.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-kill-over-46pt5
+  Total Kills Over/Under 44.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-kill-over-44pt5
+  First Blood in Game 3? | ['1win', 'PARIVISION'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-first-blood
+  Game 1: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-ends-in-daytime
+  Game 1: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-both-teams-beat-roshan
+  Game 1: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-both-teams-destroy-barracks
+  Game 1: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-any-player-ultra-kill
+  Game 1: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-any-player-rampage
+  Game 2: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-ends-in-daytime
+  Game 2: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-both-teams-beat-roshan
+  Game 2: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-both-teams-destroy-barracks
+  Game 2: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-any-player-ultra-kill
+  Game 2: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game2-any-player-rampage
+  Game 3: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-ends-in-daytime
+  Game 3: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-both-teams-beat-roshan
+  Total Kills Over/Under 45.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game3-kill-over-45pt5
+  Total Kills Over/Under 46.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-1win-pari-2026-05-10-game1-kill-over-46pt5
+  Total Kills Over/Under 47.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-47pt5
+  Total Kills Over/Under 46.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-46pt5
+  Total Kills Over/Under 49.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-kill-over-49pt5
+  Total Kills Over/Under 45.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-kill-over-45pt5
+  Total Kills Over/Under 45.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-45pt5
+  Total Kills Over/Under 48.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-48pt5
+  Total Kills Over/Under 49.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-49pt5
+  Total Kills Over/Under 46.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-46pt5
+  Total Kills Over/Under 48.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-kill-over-48pt5
+  Total Kills Over/Under 48.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-48pt5
+  Game 3: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-any-player-rampage
+  Total Kills Over/Under 49.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-49pt5
+  Total Kills Over/Under 45.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-45pt5
+  Total Kills Over/Under 47.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-kill-over-47pt5
+  Total Kills Over/Under 46.5 in Game 3? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-kill-over-46pt5
+  Game 1: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-ends-in-daytime
+  Game 1: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-both-teams-destroy-barracks
+  Game 1: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-any-player-ultra-kill
+  Game 2: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-ends-in-daytime
+  Game 2: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-both-teams-beat-roshan
+  Game 2: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-both-teams-destroy-barracks
+  Game 2: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-any-player-ultra-kill
+  Game 2: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-any-player-rampage
+  Game 3: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-ends-in-daytime
+  Game 3: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-both-teams-beat-roshan
+  Game 3: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game3-both-teams-destroy-barracks
+  Total Kills Over/Under 51.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-51pt5
+  Total Kills Over/Under 51.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-51pt5
+  Total Kills Over/Under 50.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game1-kill-over-50pt5
+  Total Kills Over/Under 50.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-playti-yes-2026-05-10-game2-kill-over-50pt5
+  Total Kills Over/Under 51.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-51pt5
+  Total Kills Over/Under 47.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-47pt5
+  Total Kills Over/Under 50.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-50pt5
+  Total Kills Over/Under 48.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-48pt5
+  Total Kills Over/Under 49.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-49pt5
+  First Blood in Game 2? | ['REKONIX', 'Nigma Galaxy'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-first-blood
+  Total Kills Over/Under 46.5 in Game 2? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-kill-over-46pt5
+  Total Kills Over/Under 46.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-46pt5
+  Game 1: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-ends-in-daytime
+  Game 1: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-both-teams-beat-roshan
+  Game 1: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-both-teams-destroy-barracks
+  Game 1: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-any-player-ultra-kill
+  Game 1: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-any-player-rampage
+  Game 2: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-ends-in-daytime
+  Game 2: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-both-teams-beat-roshan
+  Game 2: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-both-teams-destroy-barracks
+  Game 2: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-any-player-ultra-kill
+  Game 2: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game2-any-player-rampage
+  Game 3: Ends in Daytime? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game3-ends-in-daytime
+  Game 3: Both Teams Beat Roshan? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game3-both-teams-beat-roshan
+  Game 3: Both Teams Destroy Barracks? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game3-both-teams-destroy-barracks
+  Game 3: Any Player Ultra Kill? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game3-any-player-ultra-kill
+  Game 3: Any Player Rampage? | ['Yes', 'No'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game3-any-player-rampage
+  Total Kills Over/Under 51.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-51pt5
+  Total Kills Over/Under 47.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-47pt5
+  Total Kills Over/Under 49.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-49pt5
+  Total Kills Over/Under 50.5 in Game 1? | ['Over', 'Under'] | https://polymarket.com/market/dota2-rnx-ngx-2026-05-10-game1-kill-over-50pt5
+  Dota 2: Natus Vincere vs Yakult Brothers (BO1) | ['Natus Vincere', 'Yakult Brothers'] | https://polymarket.com/market/dota2-navi-yak-2025-11-26

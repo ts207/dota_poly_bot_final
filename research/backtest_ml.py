@@ -153,6 +153,6 @@ def backtest_ml_signals(db_path, onnx_path):
     ))
 
 if __name__ == "__main__":
-    db = "../data/dota_poly_collection.sqlite"
-    onnx = "dota_xgboost.onnx"
+    db = "./data/dota_poly_collection.sqlite"
+    onnx = "./research/dota_xgboost.onnx"
     backtest_ml_signals(db, onnx)

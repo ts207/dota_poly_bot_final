@@ -2,7 +2,7 @@
 Analyze dry-run signals and simulate whether orders were realistically fillable.
 
 Examples:
-    python research/analyze_signals.py --db ./data/dota_poly_collection.sqlite
+    python research/analyze_signals.py --db./data/dota_poly_collection.sqlite
     python research/analyze_signals.py --db ./data/match.sqlite --fill-window 2 --write-paper
 
 Paper-fill model:

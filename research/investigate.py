@@ -60,4 +60,4 @@ def investigate_anomalies(db_path, onnx_path):
     print(sig_df[['match_key', 'game_time', 'nw_diff', 'prob_radiant', 'mid', 'edge']].head(20).to_string(index=False))
 
 if __name__ == "__main__":
-    investigate_anomalies("../data/dota_poly_collection.sqlite", "dota_xgboost.onnx")
+    investigate_anomalies("./data/dota_poly_collection.sqlite", "./research/dota_xgboost.onnx")

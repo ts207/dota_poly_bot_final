@@ -4,7 +4,7 @@ import numpy as np
 import onnxruntime as ort
 
 def check_reprice_time():
-    conn = sqlite3.connect("../data/dota_poly_collection.sqlite")
+    conn = sqlite3.connect("./data/dota_poly_collection.sqlite")
     dota_df = pd.read_sql_query("SELECT ts_ms, match_key, game_time, nw_diff, radiant_score - dire_score AS score_diff FROM dota_ticks ORDER BY ts_ms", conn)
     market_df = pd.read_sql_query("SELECT ts_ms, mid, spread FROM market_ticks WHERE token_id = 'COMBINED_RADIANT' ORDER BY ts_ms", conn)
     
@@ -13,7 +13,7 @@ def check_reprice_time():
     df['score_change_60s'] = df.groupby('match_key')['score_diff'].diff(periods=60).fillna(0)
     df = df.dropna()
     
-    session = ort.InferenceSession("dota_xgboost.onnx")
+    session = ort.InferenceSession("./research/dota_xgboost.onnx")
     input_name = session.get_inputs()[0].name
     
     signals = []

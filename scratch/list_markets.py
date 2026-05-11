@@ -9,13 +9,12 @@ async def main():
         markets = await disc.search_dota_markets(active=True, strict_match_winner_only=False)
         print(f"Total candidate markets found: {len(markets)}")
         for m in markets:
-            if "Nigma" in m.question or "PlayTime" in m.question or "NGX" in m.question or "ptime" in m.question.lower():
-                print(f"{m.question}")
-                print(f"  Outcomes: {m.outcomes}")
-                print(f"  Tokens:   {m.clob_token_ids}")
-                print(f"  CID:      {m.condition_id}")
-                print(f"  Slug:     {m.slug}")
-                print("-" * 40)
+            print(f"{m.question}")
+            print(f"  Outcomes: {m.outcomes}")
+            print(f"  Tokens:   {m.clob_token_ids}")
+            print(f"  CID:      {m.condition_id}")
+            print(f"  Slug:     {m.slug}")
+            print("-" * 40)
     finally:
         await disc.close()
 
