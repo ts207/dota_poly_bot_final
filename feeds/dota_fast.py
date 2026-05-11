@@ -177,14 +177,8 @@ class DotaFastFeed:
 
             lead = float(target_game.get("radiant_lead", 0) or 0)
 
-            last_update = float(target_game.get("last_update_time", 0) or 0)
-            now_s = time.time()
-            api_delay_s = now_s - last_update if last_update > 0 else 0.0
-
             tick = {
                 "ts_ms": int(now_s * 1000),
-                "last_update_ts": int(last_update * 1000),
-                "api_delay_s": api_delay_s,
                 "match_key": str(target_game.get("server_steam_id") or target_game.get("lobby_id") or ""),
                 "server_steam_id": str(target_game.get("server_steam_id") or ""),
                 "partner": int(target_game.get("_partner", -1)),
