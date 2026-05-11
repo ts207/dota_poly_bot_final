@@ -73,7 +73,7 @@ class DotaFastFeed:
         dire = self._norm_team(game, "team_name_dire")
 
         if self.target_radiant_team and self.target_dire_team:
-            return self._name_match(self.target_radiant_team, radiant) and self._name_match(self.target_dire_team, dire)
+            return self.team_pair_matches(game, self.target_radiant_team, self.target_dire_team)
 
         # Backward-compatible fallback. Safer exact pair/server matching is preferred.
         if self.target_match_name:
@@ -158,6 +158,19 @@ class DotaFastFeed:
                     if hasattr(self, "_last_partner") and partner == self._last_partner:
                         continue
                     target_game = await self._fetch_partner(session, partner)
+                    
+                    # ── STALE CACHE GUARD ──
+                    if target_game:
+                        gt = float(target_game.get("game_time", 0))
+                        lead = float(target_game.get("radiant_lead", 0))
+                        # If game is clearly "over" (time > 30m) and we've seen this exact state before, reject it.
+                        if gt > 1800 and hasattr(self, "_last_stale_check"):
+                            last_gt, last_lead = self._last_stale_check
+                            if gt == last_gt and lead == last_lead:
+                                target_game = None # Keep looking
+                                continue
+                        self._last_stale_check = (gt, lead)
+                        
                     if target_game:
                         self._last_partner = partner
                         break

@@ -66,15 +66,35 @@ class FeatureEngine:
         self._last_game_time: float = 0.0
         self._last_game_time_ts: int = 0
         self._stale_game_time: bool = False
+        # Instant snapshot deltas — updated every add_dota(), game_time-window independent.
+        # These capture what changed between the previous API snapshot and this one,
+        # even when game_time jumps 50+ seconds and all windowed features are zero.
+        self._snapshot_score_delta: int = 0   # total kills that arrived with this snapshot
+        self._snapshot_nw_delta: float = 0.0  # NW change from previous snapshot
+        self._snapshot_gt_jump: float = 0.0   # how many game-seconds this snapshot covered
+        self._prev_score_total: int = 0
+        self._prev_nw_diff: float = 0.0
+        self._prev_game_time: float = 0.0
 
     def add_dota(self, tick: Dict[str, Any]):
         gt = float(tick.get("game_time", 0))
         ts = int(tick.get("ts_ms", 0))
+        score_total = int(tick.get("radiant_score", 0)) + int(tick.get("dire_score", 0))
+        nw_now = float(tick.get("nw_diff", 0.0))
+
         if gt == self._last_game_time and ts != self._last_game_time_ts:
-            # game_time unchanged but wall-clock advanced → feed is stale
             self._stale_game_time = True
+            # During freeze: snapshot deltas remain from when game_time last advanced
         elif gt != self._last_game_time:
             self._stale_game_time = False
+            # New snapshot: compute instant deltas relative to previous snapshot state
+            self._snapshot_score_delta = score_total - self._prev_score_total
+            self._snapshot_nw_delta    = nw_now - self._prev_nw_diff
+            self._snapshot_gt_jump     = gt - self._prev_game_time
+            self._prev_score_total = score_total
+            self._prev_nw_diff     = nw_now
+            self._prev_game_time   = gt
+
         self._last_game_time = gt
         self._last_game_time_ts = ts
         self.dota.add(tick)
@@ -88,6 +108,12 @@ class FeatureEngine:
         self._last_game_time = 0.0
         self._last_game_time_ts = 0
         self._stale_game_time = False
+        self._snapshot_score_delta = 0
+        self._snapshot_nw_delta    = 0.0
+        self._snapshot_gt_jump     = 0.0
+        self._prev_score_total = 0
+        self._prev_nw_diff     = 0.0
+        self._prev_game_time   = 0.0
 
     @staticmethod
     def _score_diff(t: Dict[str, Any]) -> int:
@@ -183,6 +209,15 @@ class FeatureEngine:
 
         f["feature_elapsed_sec"] = (game_time_now - float(self.dota.items[0].get("game_time", game_time_now))) if self.dota.items else 0.0
         f["game_time_stale"] = self._stale_game_time
+        # How long has game_time been frozen? When >0, the Steam API stopped advancing
+        # game_time while wall-clock kept moving. Market has had this long to react.
+        f["market_lag"] = (now_ms - self._last_game_time_ts) / 1000.0 if self._stale_game_time else 0.0
+        # Instant snapshot deltas: what changed between the last API snapshot and this one.
+        # Unlike nw_change_10s/score_change_10s, these are non-zero whenever a new snapshot
+        # arrives with accumulated kills/NW, regardless of how big the game_time jump was.
+        f["snapshot_score_delta"] = self._snapshot_score_delta
+        f["snapshot_nw_delta"]    = self._snapshot_nw_delta
+        f["snapshot_gt_jump"]     = self._snapshot_gt_jump
 
         # If game_time is stale, zero out game-time-based change features
         # since they would be comparing current to same-current (producing 0s)

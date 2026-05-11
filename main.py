@@ -25,6 +25,79 @@ from discovery.polymarket_gamma import (
     map_market_to_team_tokens,
     market_team_pair_hint,
 )
+import json
+from pathlib import Path
+from typing import Dict, Any
+
+class ManualCommandListener:
+    def __init__(self, cmd_file: str = "data/manual_commands.json"):
+        self.cmd_file = Path(cmd_file)
+        self.cmd_file.parent.mkdir(parents=True, exist_ok=True)
+        if not self.cmd_file.exists():
+            self._write({})
+            
+    def _write(self, data):
+        with open(self.cmd_file, "w") as f:
+            json.dump(data, f)
+            
+    def check_take_profit_exits(self, match_key: str, current_mid: float, fair_price: float, db) -> list[dict]:
+        """
+        Scans the database for active positions (signals) in the current match
+        and determines if we should 'Take Profit' or 'Exit' based on price movement.
+        """
+        exits = []
+        try:
+            # Get signals from this match that were fired in the last 60 minutes
+            # (Signals don't have an 'active' flag, so we look at all recent ones)
+            cur = db.cursor()
+            cur.execute("""
+                SELECT id, side, execution_price, fair_price, trigger 
+                FROM signals 
+                WHERE match_key = ? AND ts_ms > ?
+            """, (match_key, int((time.time() - 3600) * 1000)))
+            
+            for row in cur.fetchall():
+                sig_id, side, entry_p, sig_fair, trigger = row
+                if not entry_p: continue
+                
+                # Logic A: Aggressive Take Profit (3x Gain)
+                # If we bought at 0.05 and it's now 0.15, exit.
+                if current_mid >= entry_p * 2.5:
+                    exits.append({
+                        "action": "EXIT_TAKE_PROFIT",
+                        "reason": f"3x Profit reached ({entry_p} -> {current_mid})",
+                        "side": side,
+                        "original_signal_id": sig_id
+                    })
+                    continue
+
+                # Logic B: Edge Convergence (The 'Gap' is closed)
+                # If we bought because model was > market, and now market >= model, exit.
+                # Only exit if we are at least in some profit (mid > entry)
+                if current_mid >= fair_price and current_mid > entry_p:
+                    exits.append({
+                        "action": "EXIT_CONVERGENCE",
+                        "reason": f"Market caught up to Model ({current_mid} >= {fair_price})",
+                        "side": side,
+                        "original_signal_id": sig_id
+                    })
+
+        except Exception as e:
+            print(f"[ERROR] Exit logic failed: {e}")
+        
+        return exits
+            
+    def get_and_clear(self) -> Optional[Dict[str, Any]]:
+        if not self.cmd_file.exists(): return None
+        try:
+            with open(self.cmd_file, "r") as f:
+                cmd = json.load(f)
+            if cmd:
+                self._write({}) # Clear after reading
+                return cmd
+        except:
+            pass
+        return None
 
 dotenv_path = os.getenv("DOTENV_PATH", ".env")
 load_dotenv(dotenv_path, override=True)
@@ -127,7 +200,7 @@ def log_startup_config(logger: BotLogger, run_context: dict[str, object], db_pat
     )
     logger.info(f"Database path: {db_path}")
 
-    default_enabled_triggers = "FIGHT_GAP,LEAD_FLIP_GAP,MARKET_CONFIRM,STRUCTURE_GAP,STRUCTURE_EVENT"
+    default_enabled_triggers = "FIGHT_GAP,LEAD_FLIP_GAP,MARKET_CONFIRM,STRUCTURE_GAP,KILL_UNSEEN,NW_SURGE,OVERREACTION"
     env_enabled = os.getenv("ENABLED_TRIGGERS", "")
     resolved_enabled = env_set("ENABLED_TRIGGERS", default_enabled_triggers)
     logger.info(
@@ -228,6 +301,9 @@ class SeriesSupervisor:
                 self.radiant_token_id = os.getenv("RADIANT_TOKEN_ID", "").strip()
                 self.dire_token_id = os.getenv("DIRE_TOKEN_ID", "").strip()
                 self.logger.info(f"Supervisor: Using explicit market {self.market_id}")
+            
+            # CRITICAL: Always align sides even with manual IDs to handle lobby swaps
+            await self._align_sides()
             return bool(self.market_id and self.radiant_token_id and self.dire_token_id), False
 
         map_num = int(os.getenv("MAP_NUMBER_OVERRIDE", self.dota_feed.current_map_number))
@@ -341,8 +417,8 @@ async def strategy_loop(
 ):
     logger.info("Starting Strategy loop with SeriesSupervisor...")
 
-    default_enabled_triggers = "FIGHT_GAP,LEAD_FLIP_GAP,MARKET_CONFIRM,STRUCTURE_GAP,STRUCTURE_EVENT"
-    default_trigger_windows = "FIGHT_GAP:8-45,LEAD_FLIP_GAP:12-40,MARKET_CONFIRM:10-45,STRUCTURE_GAP:10-45,STRUCTURE_EVENT:10-45,SLOW_BLEED:15-35"
+    default_enabled_triggers = "FIGHT_GAP,LEAD_FLIP_GAP,MARKET_CONFIRM,STRUCTURE_GAP,KILL_UNSEEN,NW_SURGE,OVERREACTION"
+    default_trigger_windows = "FIGHT_GAP:8-45,LEAD_FLIP_GAP:12-40,MARKET_CONFIRM:10-45,STRUCTURE_GAP:10-45,KILL_UNSEEN:8-45,NW_SURGE:15-45,OVERREACTION:5-45"
     enabled_triggers = env_set("ENABLED_TRIGGERS", default_enabled_triggers)
     blocked_triggers = env_set("BLOCKED_TRIGGERS", "")
     trigger_windows = env_trigger_windows("TRIGGER_MINUTE_WINDOWS", default_trigger_windows)
@@ -356,6 +432,7 @@ async def strategy_loop(
     all_known_triggers = {
         "FIGHT_GAP", "LEAD_FLIP_GAP", "STRUCTURE_GAP", "MARKET_CONFIRM",
         "FIGHT_EVENT", "LEAD_FLIP_EVENT", "STRUCTURE_EVENT", "OVERREACTION", "SLOW_BLEED",
+        "KILL_UNSEEN", "NW_SURGE",
     }
     unknown = enabled_triggers - all_known_triggers
     if unknown:
@@ -379,6 +456,7 @@ async def strategy_loop(
         "map_number_override": os.getenv("MAP_NUMBER_OVERRIDE", ""),
     })
 
+    cmd_listener = ManualCommandListener()
     last_logged_m_ts: dict[tuple[str, str], int] = {}
     _first_dota_tick_ts: Optional[int] = None
     _data_gap_logged = False
@@ -494,7 +572,53 @@ async def strategy_loop(
                     f"| Disagree={f['combined_mid_disagreement']:.3f}"
                 )
 
-            signal = signal_engine.generate(f, has_open_orders=bool(orders.open_orders))
+            # ── 4. Manual Commands & Auto Exits ──
+            manual_cmd = cmd_listener.get_and_clear()
+            if manual_cmd:
+                action = manual_cmd.get("action")
+                logger.info(f"MANUAL COMMAND RECEIVED: {action}")
+                if action == "FORCE_EXIT":
+                    await orders.cancel_all()
+                    logger.warning("MANUAL: Position exit command processed.")
+                    continue
+                elif action in ("FORCE_BUY_RADIANT", "FORCE_BUY_DIRE"):
+                    side = "BUY_RADIANT_YES" if action == "FORCE_BUY_RADIANT" else "BUY_DIRE_YES"
+                    signal = {
+                        "side": side,
+                        "trigger": "MANUAL_OVERRIDE",
+                        "trigger_strength": "STRONG",
+                        "expected_move": 0.50,
+                        "fair_price": 0.95 if side == "BUY_RADIANT_YES" else 0.05,
+                        "edge": 0.20,
+                        "signal_type": "MANUAL",
+                        "is_manual": True
+                    }
+                    logger.warning(f"MANUAL: Injecting {side} signal!")
+
+            # Check for Automated Exits (Take Profit)
+            if not signal:
+                # Calculate current probability for exit checking
+                fair_prob = signal_engine.predict_win_prob(f) if signal_engine.ort_session else f["mid"]
+                auto_exits = cmd_listener.check_take_profit_exits(
+                    f.get("match_key", ""), 
+                    f["mid"], 
+                    fair_prob,
+                    db
+                )
+                if auto_exits:
+                    exit_sig = auto_exits[0]
+                    logger.info(f"[STRATEGY] Auto-Exit Triggered: {exit_sig['reason']}")
+                    # Fire a 'SELL' or 'REVERSE' signal for the strategy to process
+                    signal = {
+                        "side": "EXIT",
+                        "trigger": exit_sig["action"],
+                        "reason": exit_sig["reason"],
+                        "target_signal_id": exit_sig["original_signal_id"]
+                    }
+
+            if not signal:
+                signal = signal_engine.generate(f, has_open_orders=bool(orders.open_orders))
+
             if not signal:
                 rejection = getattr(signal_engine, "last_rejection", None)
                 if rejection and rejection.get("should_log") and env_bool("LOG_SIGNAL_REJECTIONS", True):
@@ -505,6 +629,13 @@ async def strategy_loop(
                     )
 
             if signal:
+                if signal["side"] == "EXIT":
+                    logger.warning(f"EXECUTION: Closing position due to {signal['reason']}")
+                    # In this dry-run / simplified setup, we log it and cancel orders.
+                    # A live implementation would place a SELL order here.
+                    await orders.cancel_all()
+                    continue
+
                 target_token_id = radiant_token_id if signal["side"] == "BUY_RADIANT_YES" else dire_token_id
                 target_book = radiant_book if target_token_id == radiant_token_id else dire_book
 
@@ -644,23 +775,35 @@ async def strategy_loop(
                                     )
                                 continue
 
-                        # Pure Maker Logic: Join the bid for ALL triggers
-                        price = min(bid + 0.001, ask - 0.001)
-                        mode = f"MAKER_{trigger}"
+                        # Taker for event triggers (fill in the 4s latency window),
+                        # maker for drift/trend triggers (wait for price to come to us).
+                        TAKER_TRIGGERS = {"FIGHT_GAP", "LEAD_FLIP_GAP", "STRUCTURE_GAP", "MARKET_CONFIRM", "KILL_UNSEEN", "OVERREACTION"}
+                        if trigger in TAKER_TRIGGERS:
+                            # Cross the spread: place at ask + 1 tick to take immediately.
+                            # Orders are cancelled in 1s if unfilled, so we only fill against
+                            # stale quotes — not against a market that's already repriced.
+                            price = min(ask + 0.001, 0.97)
+                            mode = f"TAKER_{trigger}"
+                        else:
+                            # Maker: join the bid and wait for a taker to come to us.
+                            price = min(bid + 0.001, ask - 0.001)
+                            mode = f"MAKER_{trigger}"
 
-                        # Maker Edge Guard: Ensure fair value is still > 3c above our entry
                         exec_edge = fair - price
-                        if exec_edge < 0.03:
-                            logger.info(f"Execution blocked: MAKER_EDGE_TOO_SMALL (Edge={exec_edge:.4f}, Fair={fair:.4f}, Price={price:.4f})")
+                        # Taker pays spread so allow slightly tighter floor (2c vs 3c).
+                        edge_floor = 0.02 if trigger in TAKER_TRIGGERS else 0.03
+                        if exec_edge < edge_floor:
+                            label = "TAKER_EDGE_TOO_SMALL" if trigger in TAKER_TRIGGERS else "MAKER_EDGE_TOO_SMALL"
+                            logger.info(f"Execution blocked: {label} (Edge={exec_edge:.4f}, Fair={fair:.4f}, Price={price:.4f})")
                             if env_bool("LOG_SIGNAL_REJECTIONS", True):
                                 db.log_signal_rejection(
                                     rejection={
                                         "match_key": f.get("match_key"), "trigger": trigger, "trigger_strength": signal.get("trigger_strength"), "side": signal.get("side"),
-                                        "reason": "MAKER_EDGE_TOO_SMALL", "game_time": f.get("game_time"),
+                                        "reason": label, "game_time": f.get("game_time"),
                                         "mid": f.get("mid"), "spread": target_book.get("spread"),
                                         "combined_mid_disagreement": f.get("combined_mid_disagreement"),
                                         "expected_move": signal.get("expected_move"), "fair_price": fair,
-                                        "edge": exec_edge, "edge_floor": 0.03,
+                                        "edge": exec_edge, "edge_floor": edge_floor,
                                     },
                                     market_id=market_id, token_id=target_token_id,
                                 )
@@ -679,9 +822,15 @@ async def strategy_loop(
                         signal["execution_mode"] = mode
                         signal_id = db.log_signal(signal, f, dota_tick["match_key"], market_id, target_token_id=target_token_id)
                         result = await orders.buy_limit(target_token_id, price, size, signal, signal_id=signal_id)
+                        # Event-based triggers: cancel quickly so fills only happen against
+                        # stale quotes in the 4s window before market reprices.
+                        # Model/drift triggers: give more time for the maker to fill.
+                        is_event_trigger = trigger in {"FIGHT_GAP", "LEAD_FLIP_GAP", "STRUCTURE_GAP", "MARKET_CONFIRM"}
+                        default_cancel = "1.0" if is_event_trigger else "2.0"
+                        live_default  = "0.8" if is_event_trigger else "1.5"
                         cancel_after_s = float(os.getenv(
                             "LIVE_CANCEL_AFTER_S" if env_bool("ENABLE_LIVE_TRADING", False) else "ORDER_CANCEL_AFTER_S",
-                            "1.5" if env_bool("ENABLE_LIVE_TRADING", False) else "2.0",
+                            live_default if env_bool("ENABLE_LIVE_TRADING", False) else default_cancel,
                         ))
                         asyncio.create_task(orders.cancel_after(result["id"], seconds=cancel_after_s))
 

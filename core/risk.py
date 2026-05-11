@@ -16,7 +16,7 @@ class RiskEngine:
         self.max_position_per_match = _env_float("RISK_MAX_POSITION_PER_MATCH", 100.0)
         self.max_order_size = _env_float("RISK_MAX_ORDER_SIZE", 20.0)
         self.max_dota_tick_age_ms = int(_env_float("RISK_MAX_DOTA_TICK_AGE_MS", 1500))
-        self.max_book_age_ms = int(_env_float("RISK_MAX_BOOK_AGE_MS", 800))
+        self.max_book_age_ms = int(_env_float("RISK_MAX_BOOK_AGE_MS", 5000))
         self.max_spread = _env_float("RISK_MAX_SPREAD", 0.04)
         self.max_combined_disagreement = _env_float("RISK_MAX_COMBINED_DISAGREEMENT", 0.08)
         self.min_exit_depth = _env_float("RISK_MIN_EXIT_DEPTH", 25.0)
@@ -48,7 +48,7 @@ class RiskEngine:
             return False, "EXECUTION_SPREAD_TOO_WIDE"
             
         mid = float(combined_book.get("mid", 0.5))
-        if spread > max(0.02, mid * 0.15):
+        if spread > max(0.02, mid * 0.25):
             return False, "EXECUTION_RELATIVE_SPREAD_TOO_WIDE"
             
         # Exit Liquidity Filter: Ensure there is a bid to sell into later.
@@ -94,7 +94,12 @@ class RiskEngine:
             is_snowball = signal.get("is_snowball_regime", False)
             multiplier = 1.0 * health if is_snowball else 0.1 * health
         elif trigger == "FIGHT_GAP":
-            multiplier = (0.35 if strength == "STRONG" else 0.20) * health
+            if strength == "STRONG":
+                multiplier = 0.35 * health
+            elif strength == "WEAK":   # single kill, latency-edge only
+                multiplier = 0.10 * health
+            else:                      # NORMAL: multi-kill, directional
+                multiplier = 0.20 * health
         elif trigger == "LEAD_FLIP_GAP":
             multiplier = 0.35 * health
         elif trigger == "STRUCTURE_GAP":
