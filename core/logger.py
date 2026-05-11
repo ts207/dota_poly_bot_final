@@ -15,5 +15,8 @@ class BotLogger:
     def trade(self, msg: str):
         self.console.print(f"[bold green][TRADE][/bold green] {msg}")
 
+    def warning(self, msg: str):
+        self.console.print(f"[yellow][WARN][/yellow] {msg}")
+
     def error(self, msg: str):
         self.console.print(f"[bold red][ERROR][/bold red] {msg}")

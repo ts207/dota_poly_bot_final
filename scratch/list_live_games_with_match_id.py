@@ -28,11 +28,12 @@ async def list_games():
         if sid in seen:
             continue
         seen.add(sid)
-        r = str(g.get("team_name_radiant", ""))
-        d = str(g.get("team_name_dire", ""))
-        m = str(g.get("match_id", ""))
-        if "lynx" in r.lower() or "lynx" in d.lower() or m == "8806795642":
-            print(f"{m:<15} | {r:<15} | {d:<15} | {sid:<20}")
+        r = g.get("team_name_radiant", "")
+        d = g.get("team_name_dire", "")
+        m = g.get("match_id", "")
+        if m == 8806795642 or m == "8806795642":
+            print(f"FOUND MATCH: {m:<15} | {str(r):<15} | {str(d):<15} | {sid:<20}")
+        # print(f"{m:<15} | {str(r):<15} | {str(d):<15} | {sid:<20}")
 
 if __name__ == "__main__":
     asyncio.run(list_games())

@@ -1,0 +1,15 @@
+import asyncio
+from discovery.polymarket_gamma import PolymarketGammaDiscovery
+
+async def main():
+    discovery = PolymarketGammaDiscovery()
+    markets = await discovery.search_dota_markets(query_terms=['dota2-pr1-modus-2026-05-11-game2'])
+    for m in markets:
+        print(f"Slug: {m.slug}")
+        print(f"Market ID: {m.condition_id}")
+        print(f"Outcomes: {m.outcomes}")
+        print(f"Tokens: {m.clob_token_ids}")
+    await discovery.close()
+
+if __name__ == '__main__':
+    asyncio.run(main())

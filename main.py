@@ -3,7 +3,6 @@ import asyncio
 import os
 import subprocess
 import time
-import traceback
 import uuid
 from typing import Optional, Tuple
 
@@ -11,6 +10,7 @@ from dotenv import load_dotenv
 
 from feeds.dota_fast import DotaFastFeed
 from feeds.polymarket_ws import PolyMarketBook
+from feeds.league_feed import league_poll_loop
 from core.features import FeatureEngine
 from core.signals import SignalEngine, normalize_trigger
 from core.risk import RiskEngine
@@ -26,7 +26,8 @@ from discovery.polymarket_gamma import (
     market_team_pair_hint,
 )
 
-load_dotenv(override=True)
+dotenv_path = os.getenv("DOTENV_PATH", ".env")
+load_dotenv(dotenv_path, override=True)
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -108,13 +109,16 @@ def token_for_rejection(rejection: Optional[dict], radiant_token_id: str, dire_t
     return None
 
 
-def log_startup_config(logger: BotLogger, run_context: dict[str, object], db_path: str) -> None:
+def log_startup_config(logger: BotLogger, run_context: dict[str, object], db_path: str, db: Optional[BotDatabase] = None) -> None:
     keys = [
         "ENABLE_LIVE_TRADING", "LIVE_PROBE_ONLY", "AUTO_DISCOVER_POLYMARKET",
         "ALLOW_LIVE_AUTO_DISCOVERY", "ALLOW_LIVE_ANY_DISCOVERED_MATCH",
         "TARGET_SERVER_STEAM_ID", "TARGET_RADIANT_TEAM", "TARGET_DIRE_TEAM",
         "TARGET_MATCH", "ENABLED_TRIGGERS", "BLOCKED_TRIGGERS",
         "TRIGGER_MINUTE_WINDOWS", "DATABASE_PATH",
+        "RISK_MAX_DOTA_TICK_AGE_MS", "RISK_MAX_BOOK_AGE_MS",
+        "RISK_MAX_SPREAD", "RISK_MAX_COMBINED_DISAGREEMENT",
+        "SIGNAL_MIN_EDGE", "SIGNAL_MAX_SPREAD", "SIGNAL_MIN_EXPECTED_MOVE",
     ]
     logger.info(
         "Run context: "
@@ -122,8 +126,31 @@ def log_startup_config(logger: BotLogger, run_context: dict[str, object], db_pat
         f"git_sha={run_context.get('git_sha')} started_at_ts_ms={run_context.get('started_at_ts_ms')}"
     )
     logger.info(f"Database path: {db_path}")
+
+    default_enabled_triggers = "FIGHT_GAP,LEAD_FLIP_GAP,MARKET_CONFIRM,STRUCTURE_GAP,STRUCTURE_EVENT"
+    env_enabled = os.getenv("ENABLED_TRIGGERS", "")
+    resolved_enabled = env_set("ENABLED_TRIGGERS", default_enabled_triggers)
+    logger.info(
+        f"CONFIG RESOLVED_ENABLED_TRIGGERS={','.join(sorted(resolved_enabled)) or 'NONE'} "
+        f"(env={'set' if env_enabled else 'default'})"
+    )
+
     for key in keys:
         logger.info(f"CONFIG {key}={os.getenv(key, '')}")
+
+    if db:
+        try:
+            with db._get_conn() as conn:
+                prev_runs = conn.execute(
+                    "SELECT COUNT(DISTINCT run_id) FROM dota_ticks WHERE run_id IS NOT NULL AND run_id != ''"
+                ).fetchone()[0]
+            if prev_runs > 0:
+                logger.warning(
+                    f"STARTUP: Detected {prev_runs} previous run(s) in database. "
+                    f"This may indicate a restart during an active match."
+                )
+        except Exception:
+            pass
 
 
 def write_discovered_target_env(
@@ -189,7 +216,8 @@ class SeriesSupervisor:
         
         # Explicit overrides
         self.env_market_id = os.getenv("MARKET_ID", "").strip()
-        if is_placeholder(self.env_market_id): self.env_market_id = ""
+        if is_placeholder(self.env_market_id):
+            self.env_market_id = ""
         self.auto_discover = env_bool("AUTO_DISCOVER_POLYMARKET", True) or not self.env_market_id
 
     async def sync_state(self) -> Tuple[bool, bool]:
@@ -202,7 +230,7 @@ class SeriesSupervisor:
                 self.logger.info(f"Supervisor: Using explicit market {self.market_id}")
             return bool(self.market_id and self.radiant_token_id and self.dire_token_id), False
 
-        map_num = self.dota_feed.current_map_number
+        map_num = int(os.getenv("MAP_NUMBER_OVERRIDE", self.dota_feed.current_map_number))
         map_changed = False
         if map_num != self._last_map_number or not self.market_id:
             await self._discover(map_num)
@@ -274,10 +302,23 @@ class SeriesSupervisor:
 
 async def dota_loop(feed: DotaFastFeed, features: FeatureEngine, db: BotDatabase, logger: BotLogger):
     logger.info("Starting Dota loop...")
+    first_tick_logged = False
     while True:
         try:
             tick = await feed.fetch_once()
             if tick:
+                game_time_s = float(tick.get("game_time", 0) or 0)
+                if not first_tick_logged:
+                    first_tick_logged = True
+                    game_min = game_time_s / 60.0
+                    if game_min > 5.0:
+                        logger.warning(
+                            f"LATE JOIN: First Dota tick at game_time={game_min:.1f}m. "
+                            f"Missed first {game_min:.1f} minutes. Feature windows will be incomplete "
+                            f"and early-game signals will be unreliable."
+                        )
+                    else:
+                        logger.info(f"First Dota tick at game_time={game_min:.1f}m")
                 features.add_dota(tick)
                 db.log_dota_tick(tick)
         except Exception as e:
@@ -312,10 +353,35 @@ async def strategy_loop(
         window_desc = ", ".join(f"{k}:{v[0]:g}-{v[1]:g}m" for k, v in sorted(trigger_windows.items()))
         logger.info(f"Trigger minute windows: {window_desc}")
 
-    # Local cache for market tick logging. strategy_loop is not a class method,
-    # so this must not be stored on `self`. Include market_id in the key so map
-    # transitions do not suppress fresh ticks for newly discovered markets.
+    all_known_triggers = {
+        "FIGHT_GAP", "LEAD_FLIP_GAP", "STRUCTURE_GAP", "MARKET_CONFIRM",
+        "FIGHT_EVENT", "LEAD_FLIP_EVENT", "STRUCTURE_EVENT", "OVERREACTION", "SLOW_BLEED",
+    }
+    unknown = enabled_triggers - all_known_triggers
+    if unknown:
+        logger.warning(f"ENABLED_TRIGGERS contains unknown triggers: {unknown}")
+    missing_enabled = all_known_triggers - enabled_triggers - blocked_triggers
+    if missing_enabled:
+        logger.info(f"Triggers neither enabled nor blocked (won't fire): {missing_enabled}")
+
+    db.log_run_config({
+        "enabled_triggers": ",".join(sorted(enabled_triggers)),
+        "blocked_triggers": ",".join(sorted(blocked_triggers)),
+        "trigger_windows": str(trigger_windows),
+        "signal_min_edge": float(os.getenv("SIGNAL_MIN_EDGE", "0.04")),
+        "risk_max_book_age_ms": int(float(os.getenv("RISK_MAX_BOOK_AGE_MS", "800"))),
+        "risk_max_dota_tick_age_ms": int(float(os.getenv("RISK_MAX_DOTA_TICK_AGE_MS", "1500"))),
+        "enable_live_trading": os.getenv("ENABLE_LIVE_TRADING", "false"),
+        "auto_discover": os.getenv("AUTO_DISCOVER_POLYMARKET", "true"),
+        "target_server_steam_id": os.getenv("TARGET_SERVER_STEAM_ID", ""),
+        "target_radiant_team": os.getenv("TARGET_RADIANT_TEAM", ""),
+        "target_dire_team": os.getenv("TARGET_DIRE_TEAM", ""),
+        "map_number_override": os.getenv("MAP_NUMBER_OVERRIDE", ""),
+    })
+
     last_logged_m_ts: dict[tuple[str, str], int] = {}
+    _first_dota_tick_ts: Optional[int] = None
+    _data_gap_logged = False
 
     while True:
         try:
@@ -323,7 +389,11 @@ async def strategy_loop(
             is_active, map_changed = await supervisor.sync_state()
             if not is_active:
                 if int(time.time()) % 15 == 0:
-                    print("Strategy: Waiting for active market discovery...")
+                    has_dota = dota_feed.latest is not None
+                    print(
+                        f"Strategy: Waiting for active market discovery... "
+                        f"(Dota connected={has_dota}, market_id={supervisor.market_id or 'none'})"
+                    )
                 await asyncio.sleep(2.0)
                 continue
             
@@ -356,14 +426,42 @@ async def strategy_loop(
             radiant_book = poly_book.get_book(radiant_token_id)
             dire_book = poly_book.get_book(dire_token_id)
 
+            if dota_tick and _first_dota_tick_ts is None:
+                _first_dota_tick_ts = int(dota_tick.get("ts_ms", 0) or 0)
+            if dota_tick and not _data_gap_logged and radiant_book and dire_book:
+                book_ts = int(radiant_book.get("ts_ms", 0) or 0)
+                if _first_dota_tick_ts and book_ts:
+                    gap_s = (book_ts - _first_dota_tick_ts) / 1000.0
+                    if gap_s > 60:
+                        logger.warning(
+                            f"DATA GAP: {gap_s:.0f}s ({gap_s/60:.1f}m) between first Dota tick "
+                            f"and first market book. No signals could fire during this window."
+                        )
+                _data_gap_logged = True
+
             if not dota_tick or not radiant_book or not dire_book:
                 if int(time.time()) % 10 == 0:
+                    missing = []
+                    if not dota_tick:
+                        missing.append("Dota")
+                    if not radiant_book:
+                        missing.append("RadiantBook")
+                    if not dire_book:
+                        missing.append("DireBook")
                     print(
                         "Strategy: Waiting for data... "
-                        f"Dota={bool(dota_tick)} RadiantBook={bool(radiant_book)} DireBook={bool(dire_book)}"
+                        + " ".join(f"{m}={False}" for m in missing)
                     )
                 await asyncio.sleep(1.0)
                 continue
+
+            _game_time_now = float(dota_tick.get("game_time", 0) or 0)
+            if not hasattr(strategy_loop, "_late_join_logged") and _game_time_now > 600:
+                logger.warning(
+                    f"LATE JOIN: Strategy active at game_time={_game_time_now/60:.1f}m. "
+                    f"Market may already reflect current game state; signal edge may be reduced."
+                )
+                strategy_loop._late_join_logged = True
 
             combined_book = combine_binary_books(radiant_book, dire_book)
 
@@ -605,7 +703,7 @@ async def main():
     os.environ.setdefault("RUN_ID", str(run_context["run_id"]))
     db_path = os.getenv("DATABASE_PATH", "dota_poly_bot/storage/bot_data.db")
     db = BotDatabase(db_path, run_context=run_context)
-    log_startup_config(logger, run_context, db_path)
+    log_startup_config(logger, run_context, db_path, db=db)
 
     target_match = os.getenv("TARGET_MATCH", "").strip()
     target_radiant_team = os.getenv("TARGET_RADIANT_TEAM", "").strip()
@@ -693,10 +791,14 @@ async def main():
         orders = OrderManager(poly_client=None, dry_run=True, db=db, market_id=market_id)
         logger.info("DRY RUN MODE ENABLED.")
 
+    league_interval = float(os.getenv("LEAGUE_POLL_INTERVAL", "10"))
+    league_delay = float(os.getenv("LEAGUE_POLL_DELAY_START", "3"))
+
     try:
         await asyncio.gather(
             dota_loop(dota_feed, features, db, logger),
             poly_book.run(),
+            league_poll_loop(interval=league_interval, delay_start=league_delay),
             strategy_loop(
                 dota_feed,
                 poly_book,

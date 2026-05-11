@@ -46,8 +46,8 @@ class PolyMarketBook:
         new_ids = [str(a) for a in asset_ids]
         if set(new_ids) == set(self.asset_ids):
             return
-            
-        print(f"Polymarket WS: Updating assets to {new_ids}")
+
+        print(f"Polymarket WS: Updating assets to {[aid[:10]+'...' for aid in new_ids]} ({len(new_ids)} assets)")
         old_ids = set(self.asset_ids)
         new_set = set(new_ids)
         self.asset_ids = new_ids
@@ -67,14 +67,21 @@ class PolyMarketBook:
             await self._ws.close()
 
     async def run(self):
+        reconnect_count = 0
         while True:
             try:
+                t0 = time.time()
                 await self.refresh_snapshots()
                 async with websockets.connect(self.url, ping_interval=10, ping_timeout=10) as ws:
                     self._ws = ws
                     sub = {"assets_ids": self.asset_ids, "type": "market"}
                     await ws.send(json.dumps(sub))
-                    print(f"Polymarket WS subscribed to {len(self.asset_ids)} assets")
+                    connect_time = time.time() - t0
+                    reconnect_count += 1
+                    print(
+                        f"Polymarket WS subscribed to {len(self.asset_ids)} assets "
+                        f"(connect #{reconnect_count}, took {connect_time:.1f}s)"
+                    )
 
                     async for msg in ws:
                         if time.time() - self._last_snapshot_s >= self.snapshot_interval_s:

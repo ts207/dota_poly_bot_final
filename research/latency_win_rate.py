@@ -2,7 +2,7 @@ import sqlite3
 import pandas as pd
 import os
 
-DB_PATH = "/home/irene/dota_poly_bot_fin./data/dota_poly_collection.sqlite"
+DB_PATH = "/home/irene/dota_poly_bot_final/data/dota_poly_collection.sqlite"
 
 def main():
     if not os.path.exists(DB_PATH):

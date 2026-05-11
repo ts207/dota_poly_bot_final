@@ -113,7 +113,7 @@ TRIGGER_EDGE_FLOORS: Dict[str, float] = {
 }
 
 # Max edge ceiling per trigger (Draft-Trap guard).
-MAX_EDGE = 0.09
+MAX_EDGE = 0.20
 
 # Triggers disabled before signal emission. Set via BLOCKED_TRIGGERS in .env.
 # Parsed inside SignalEngine.__init__ after load_dotenv() has run.
@@ -148,6 +148,22 @@ class SignalEngine:
         self.score_60s_weight = _env_float("SIGNAL_SCORE_60S_WEIGHT", 0.010)
         self.score_30s_weight = _env_float("SIGNAL_SCORE_30S_WEIGHT", 0.005)
         self.max_expected_move = _env_float("SIGNAL_MAX_EXPECTED_MOVE", 0.25)
+
+        # Per-trigger cooldown: trigger → minimum seconds between signals of that type
+        self.trigger_cooldowns: Dict[str, float] = {
+            Trigger.SLOW_BLEED: 60.0,
+            Trigger.OVERREACTION: 45.0,
+            Trigger.FIGHT_GAP: 15.0,
+            Trigger.LEAD_FLIP_GAP: 15.0,
+            Trigger.STRUCTURE_GAP: 30.0,
+            Trigger.MARKET_CONFIRM: 15.0,
+        }
+        self.default_cooldown = _env_float("SIGNAL_DEFAULT_COOLDOWN_SEC", 30.0)
+        # Last emission time per (match_key, trigger): match_key → {trigger → ts_ms}
+        self._last_trigger_emit: Dict[str, Dict[str, int]] = {}
+
+        # Late-join feature data warmup: require this many seconds of feature data
+        self.feature_warmup_sec = _env_float("SIGNAL_FEATURE_WARMUP_SEC", 60.0)
 
         # Dedup state: match_key → (game_minute, last_fair_price)
         self._last_signal_state: Dict[str, tuple] = {}
@@ -346,9 +362,29 @@ class SignalEngine:
 
     def reset_match(self, match_key: str) -> None:
         self._last_signal_state.pop(match_key, None)
+        self._last_trigger_emit.pop(match_key, None)
 
     def generate(self, f: Dict[str, Any], has_open_orders: bool = True) -> Optional[Dict[str, Any]]:
         self.last_rejection = None
+
+        # ── 0. Late-join guard ──
+        # If the bot joined late, feature windows (nw_change_60s, score_change_60s, etc.)
+        # will be 0, making SLOW_BLEED and ML_PREDICTION unreliable.
+        game_time = float(f.get("game_time", 0.0))
+        feature_elapsed = float(f.get("feature_elapsed_sec", 0.0))
+        if feature_elapsed <= 0:
+            # Infer from game_time minus a constant join offset if feature_elapsed not provided
+            feature_elapsed = game_time
+        if feature_elapsed < self.feature_warmup_sec and game_time < self.feature_warmup_sec:
+            self._reject(f, "FEATURES_NOT_WARMED_UP", trigger="", side="")
+            return None
+
+        # ── 0b. Stale game_time guard ──
+        # If Dota feed stopped advancing game_time, nw_change_* features are unreliable
+        # (they compare current-vs-same-current producing 0s that mislead the model).
+        if f.get("game_time_stale"):
+            self._reject(f, "GAME_TIME_STALE", trigger="", side="")
+            return None
 
         # ── 1. Quality ──
         spread = float(f.get("spread", 1.0))
@@ -380,9 +416,18 @@ class SignalEngine:
             self._reject(f, "BLOCKED_TRIGGER", trigger=trigger, trigger_strength=trigger_strength)
             return None
 
-        # ── 4. Edge ──
+        # ── 4. Per-trigger cooldown ──
+        match_key = str(f.get("match_key", ""))
+        now_ms = int(time.time() * 1000)
+        last_emit = self._last_trigger_emit.setdefault(match_key, {})
+        cooldown_sec = self.trigger_cooldowns.get(trigger, self.default_cooldown)
+        last_ts = last_emit.get(trigger, 0)
+        if (now_ms - last_ts) < cooldown_sec * 1000:
+            self._reject(f, "TRIGGER_COOLDOWN", trigger=trigger, trigger_strength=trigger_strength)
+            return None
+
+        # ── 5. Edge ──
         mid = float(f.get("mid", 0.5))
-        game_time = float(f.get("game_time", 0.0))
         
         # Recommendation 1: Time-Weighted Lead Sensitivity
         time_decay = 1.0 / (1.0 + (game_time / 2400.0)) 
@@ -402,8 +447,15 @@ class SignalEngine:
                 is_snowball_climbing = True
 
         if self.ort_session:
-            # ML model already sees game_time, but heuristics benefit from explicit decay
-            expected = (self.predict_win_prob(f) - mid) * combat_shock
+            raw_prob = self.predict_win_prob(f)
+            # Time-convergence decay: as game progresses, pull raw model output toward mid
+            # Rationale: late-game fair prices converge to 0/1 (game is nearly decided),
+            # but the model trained on all game times can overestimate the gap.
+            # At game_time=0, no decay (weight=1.0 on model). At game_time=40min,
+            # weight=0.7 on model, 0.3 on market mid.
+            convergence_alpha = 1.0 / (1.0 + max(0.0, (game_time - 1800.0)) / 1800.0)
+            converged_prob = convergence_alpha * raw_prob + (1.0 - convergence_alpha) * mid
+            expected = (converged_prob - mid) * combat_shock
             signal_type = "ML_PREDICTION"
         else:
             expected = self._heuristic_expected_move(f) * combat_shock * time_decay
@@ -481,6 +533,7 @@ class SignalEngine:
 
         # ── 6. Emit ──
         self._last_signal_state[match_key] = (game_minute, fair)
+        self._last_trigger_emit.setdefault(match_key, {})[trigger] = int(time.time() * 1000)
         return {
             "side": "BUY_RADIANT_YES" if expected > 0 else "BUY_DIRE_YES",
             "trigger": trigger,

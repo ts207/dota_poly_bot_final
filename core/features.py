@@ -1,4 +1,5 @@
 # core/features.py
+import time
 from collections import deque
 from typing import Dict, Any, Optional
 
@@ -62,8 +63,20 @@ class FeatureEngine:
     def __init__(self):
         self.dota = RollingWindow(300)
         self.market = RollingWindow(300)
+        self._last_game_time: float = 0.0
+        self._last_game_time_ts: int = 0
+        self._stale_game_time: bool = False
 
     def add_dota(self, tick: Dict[str, Any]):
+        gt = float(tick.get("game_time", 0))
+        ts = int(tick.get("ts_ms", 0))
+        if gt == self._last_game_time and ts != self._last_game_time_ts:
+            # game_time unchanged but wall-clock advanced → feed is stale
+            self._stale_game_time = True
+        elif gt != self._last_game_time:
+            self._stale_game_time = False
+        self._last_game_time = gt
+        self._last_game_time_ts = ts
         self.dota.add(tick)
 
     def add_market(self, tick: Dict[str, Any]):
@@ -72,6 +85,9 @@ class FeatureEngine:
     def reset(self):
         self.dota.reset()
         self.market.reset()
+        self._last_game_time = 0.0
+        self._last_game_time_ts = 0
+        self._stale_game_time = False
 
     @staticmethod
     def _score_diff(t: Dict[str, Any]) -> int:
@@ -164,5 +180,19 @@ class FeatureEngine:
 
         for sec, m_old in ((2, m2), (5, m5), (10, m10), (30, m30), (60, m60)):
             f[f"market_change_{sec}s"] = mid_now - float(m_old.get("mid", mid_now)) if m_old else 0.0
+
+        f["feature_elapsed_sec"] = (game_time_now - float(self.dota.items[0].get("game_time", game_time_now))) if self.dota.items else 0.0
+        f["game_time_stale"] = self._stale_game_time
+
+        # If game_time is stale, zero out game-time-based change features
+        # since they would be comparing current to same-current (producing 0s)
+        # which misleads the model into thinking there's no momentum.
+        if self._stale_game_time:
+            for sec in (2, 5, 10, 30, 60, 180):
+                f[f"nw_change_{sec}s"] = 0.0
+                f[f"score_change_{sec}s"] = 0
+                f[f"building_change_{sec}s"] = 0
+            f["nw_velocity"] = 0.0
+            f["nw_acceleration"] = 0.0
 
         return f

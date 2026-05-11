@@ -116,6 +116,18 @@ class BotDatabase:
     def _ensure_live_probe_tables(self):
         with self._get_conn() as conn:
             conn.execute("""
+                CREATE TABLE IF NOT EXISTS run_configs (
+                    run_id TEXT PRIMARY KEY,
+                    ts_ms INTEGER NOT NULL,
+                    enabled_triggers TEXT,
+                    blocked_triggers TEXT,
+                    signal_min_edge REAL,
+                    risk_max_book_age_ms INTEGER,
+                    risk_max_dota_tick_age_ms INTEGER,
+                    config_json TEXT
+                )
+            """)
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS live_order_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     ts_ms INTEGER NOT NULL,
@@ -198,6 +210,23 @@ class BotDatabase:
             return json.dumps(value, default=str, sort_keys=True)
         except Exception:
             return str(value)
+
+    def log_run_config(self, config: Dict[str, Any]) -> None:
+        with self._get_conn() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO run_configs (run_id, ts_ms, enabled_triggers, blocked_triggers, signal_min_edge, risk_max_book_age_ms, risk_max_dota_tick_age_ms, config_json) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    str(self.run_context.get("run_id", "")),
+                    int(time.time() * 1000),
+                    config.get("enabled_triggers"),
+                    config.get("blocked_triggers"),
+                    config.get("signal_min_edge"),
+                    config.get("risk_max_book_age_ms"),
+                    config.get("risk_max_dota_tick_age_ms"),
+                    self._json_dumps(config),
+                ),
+            )
 
     def log_dota_tick(self, tick: Dict[str, Any]):
         with self._get_conn() as conn:
