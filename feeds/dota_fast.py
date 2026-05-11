@@ -135,6 +135,12 @@ class DotaFastFeed:
                 return game
         return None
 
+    @property
+    def current_map_number(self) -> int:
+        if not self.latest:
+            return 1
+        return int(self.latest.get("radiant_series_wins", 0)) + int(self.latest.get("dire_series_wins", 0)) + 1
+
     def set_target_server(self, server_steam_id: str):
         self.target_server_steam_id = str(server_steam_id or "").strip()
 
@@ -142,10 +148,19 @@ class DotaFastFeed:
         try:
             session = await self._get_session()
             target_game = None
-            for partner in self.partners:
-                target_game = await self._fetch_partner(session, partner)
-                if target_game:
-                    break
+            
+            # Optimization: Try the last successful partner first
+            if hasattr(self, "_last_partner"):
+                target_game = await self._fetch_partner(session, self._last_partner)
+            
+            if not target_game:
+                for partner in self.partners:
+                    if hasattr(self, "_last_partner") and partner == self._last_partner:
+                        continue
+                    target_game = await self._fetch_partner(session, partner)
+                    if target_game:
+                        self._last_partner = partner
+                        break
 
             if not target_game:
                 return None
@@ -162,8 +177,14 @@ class DotaFastFeed:
 
             lead = float(target_game.get("radiant_lead", 0) or 0)
 
+            last_update = float(target_game.get("last_update_time", 0) or 0)
+            now_s = time.time()
+            api_delay_s = now_s - last_update if last_update > 0 else 0.0
+
             tick = {
-                "ts_ms": int(time.time() * 1000),
+                "ts_ms": int(now_s * 1000),
+                "last_update_ts": int(last_update * 1000),
+                "api_delay_s": api_delay_s,
                 "match_key": str(target_game.get("server_steam_id") or target_game.get("lobby_id") or ""),
                 "server_steam_id": str(target_game.get("server_steam_id") or ""),
                 "partner": int(target_game.get("_partner", -1)),
@@ -172,6 +193,9 @@ class DotaFastFeed:
                 "game_time": float(target_game.get("game_time", 0) or 0),
                 "radiant_score": int(target_game.get("radiant_score", 0) or 0),
                 "dire_score": int(target_game.get("dire_score", 0) or 0),
+                "radiant_series_wins": int(target_game.get("radiant_series_wins", 0) or 0),
+                "dire_series_wins": int(target_game.get("dire_series_wins", 0) or 0),
+                "series_type": int(target_game.get("series_type", 0) or 0),
                 # Compatibility fields. Do not interpret as true team net worth.
                 "radiant_nw": lead if lead > 0 else 0.0,
                 "dire_nw": abs(lead) if lead < 0 else 0.0,
