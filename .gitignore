@@ -33,3 +33,4 @@ env/
 # System
 .DS_Store
 .gemini/
+.worktrees/
