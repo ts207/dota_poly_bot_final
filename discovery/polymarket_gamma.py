@@ -48,10 +48,19 @@ def _tokens(s: Any) -> set[str]:
 
 
 BAD_MARKET_TERMS = {
-    "tournament", "outright", "champion", "winner of", "map 1", "map 2",
-    "map1", "map2", "first blood", "total kills", "handicap", "spread",
+    "tournament", "outright", "champion", "winner of",
+    "first blood", "total kills", "handicap", "spread",
     "series score", "correct score", "most kills", "roshan", "duration", "over", "under"
 }
+
+
+def parse_game_number(text: str) -> Optional[int]:
+    """Extract game number from market text (e.g. 'Game 2 Winner' -> 2)."""
+    match = re.search(r"(?:game|map)\s*(\d+)", text.lower())
+    if match:
+        return int(match.group(1))
+    return None
+
 
 def _is_probably_match_winner_market(market: "DiscoveredMarket") -> bool:
     """Keep only simple binary match-winner style markets by default."""
@@ -231,6 +240,7 @@ class PolymarketGammaDiscovery:
         dire_team: str = "",
         target_match: str = "",
         min_score: float = 0.35,
+        target_game_number: Optional[int] = None,
     ) -> Optional[Tuple[DiscoveredMarket, Dict[str, str]]]:
         """Pick the best market and map team sides to CLOB token IDs.
 
@@ -249,6 +259,14 @@ class PolymarketGammaDiscovery:
         for m in markets:
             text = " ".join([m.question, m.slug, " ".join(m.outcomes)])
             base = 0.0
+
+            m_game = parse_game_number(m.question + " " + m.slug)
+            if target_game_number is not None:
+                if m_game == target_game_number:
+                    base += 1.0
+                elif m_game is not None:
+                    continue
+
             if target_match:
                 base += _team_score(target_match, text)
             if radiant_team:
