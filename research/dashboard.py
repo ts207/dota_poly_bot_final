@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.text import Text
 from rich import box
 
-DB_PATH = os.getenv("DATABASE_PATH", ./data/dota_poly_collection.sqlite")
+DB_PATH = os.getenv("DATABASE_PATH", "./data/dota_poly_collection.sqlite")
 console = Console()
 
 def get_data():

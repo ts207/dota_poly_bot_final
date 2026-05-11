@@ -1,10 +1,26 @@
-# Environment variables
+# Environment variables and generated target mappings
 .env
+data/last_discovered_target.env
+
+# Runtime logs and generated data
+*.log
+data/*.csv
+data/*.jsonl
+storage/*.jsonl
+dota_poly_bot/storage/*.jsonl
+research/*.csv
+clean_exports/
+*:Zone.Identifier
 
 # SQLite database
 data/*.sqlite
 data/*.db
 storage/*.db
+dota_poly_bot/storage/*.db
+*.sqlite-wal
+*.sqlite-shm
+*.db-wal
+*.db-shm
 
 # Python
 __pycache__/

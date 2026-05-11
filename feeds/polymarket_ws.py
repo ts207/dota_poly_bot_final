@@ -48,7 +48,17 @@ class PolyMarketBook:
             return
             
         print(f"Polymarket WS: Updating assets to {new_ids}")
+        old_ids = set(self.asset_ids)
+        new_set = set(new_ids)
         self.asset_ids = new_ids
+
+        # Remove stale books for markets/tokens that are no longer tracked. Without
+        # this, a map transition can leave old token books available for accidental
+        # reads and confusing diagnostics.
+        for stale in old_ids - new_set:
+            self._raw_books.pop(stale, None)
+            self.books.pop(stale, None)
+
         for aid in self.asset_ids:
             if aid not in self._raw_books:
                 self._raw_books[aid] = {"bids": {}, "asks": {}}

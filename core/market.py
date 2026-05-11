@@ -22,9 +22,10 @@ def combine_binary_books(
     if ts_ms is not None:
         ts = int(ts_ms)
     elif r_ts and d_ts:
-        # Use the fresher timestamp to prevent unnecessary staleness rejections
-        # if one token is extremely illiquid/inactive.
-        ts = max(r_ts, d_ts)
+        # Use the older timestamp so the combined book cannot look fresh when
+        # either leg of the binary pair is stale. Keep both leg timestamps below
+        # for downstream diagnostics.
+        ts = min(r_ts, d_ts)
     else:
         ts = r_ts or d_ts or int(time.time() * 1000)
 
@@ -51,6 +52,9 @@ def combine_binary_books(
 
     return {
         "ts_ms": ts,
+        "radiant_ts_ms": r_ts,
+        "dire_ts_ms": d_ts,
+        "leg_ts_skew_ms": abs(r_ts - d_ts) if r_ts and d_ts else None,
         "best_bid": r_bid,
         "best_ask": r_ask,
         "mid": combined_mid,

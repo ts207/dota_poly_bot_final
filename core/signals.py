@@ -127,7 +127,8 @@ class SignalEngine:
     Uses XGBoost ONNX model for win probability; falls back to heuristics.
     """
 
-    def __init__(self):
+    def __init__(self, run_context: Optional[Dict[str, Any]] = None):
+        self.run_context = run_context or {}
         # Trigger kill switch. Parsed here so .env has already been loaded by main.py.
         self.blocked_triggers = _env_set("BLOCKED_TRIGGERS", "")
         self.trigger_edge_floors = _env_float_map("TRIGGER_EDGE_FLOORS", TRIGGER_EDGE_FLOORS)
@@ -162,25 +163,56 @@ class SignalEngine:
             except Exception as e:
                 print(f"[SignalEngine] ONNX load failed: {e}")
         
-        self.shadow_log_path = "data/shadow_signals.csv"
+        self.shadow_log_path = os.getenv("SHADOW_SIGNAL_LOG_PATH", "data/shadow_signals.csv")
         self._init_shadow_log()
+
+    @staticmethod
+    def _valid_token_id(token_id: Any) -> bool:
+        v = str(token_id or "").strip().lower()
+        return bool(v) and v not in {"0", "0x", "none", "null", "todo"} and "your_" not in v
 
     def _init_shadow_log(self):
         if not os.path.exists(self.shadow_log_path):
-            os.makedirs("data", exist_ok=True)
+            os.makedirs(os.path.dirname(self.shadow_log_path) or ".", exist_ok=True)
             with open(self.shadow_log_path, "w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["ts", "game_time", "trigger", "trigger_strength", "side", "token_id", "nw_diff", "mid", "fair", "edge", "action"])
+                writer.writerow([
+                    "run_id", "pid", "git_sha", "started_at_ts_ms",
+                    "ts_ms", "match_key", "market_id", "game_time",
+                    "trigger", "trigger_strength", "side", "token_id",
+                    "nw_diff", "mid", "fair", "edge", "edge_floor", "max_edge", "action",
+                ])
 
-    def _log_shadow(self, game_time, trigger, trigger_strength, side, token_id, nw_diff, mid, fair, edge, action):
-        with open(self.shadow_log_path, "a", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([time.time(), game_time, trigger, trigger_strength, side, token_id, nw_diff, mid, fair, edge, action])
+    def _log_shadow(self, f: Dict[str, Any], trigger, trigger_strength, side, token_id, mid, fair, edge, edge_floor, action):
+        ts_ms = int(time.time() * 1000)
+        with open(self.shadow_log_path, "a", newline="") as f_out:
+            writer = csv.writer(f_out)
+            writer.writerow([
+                self.run_context.get("run_id", os.getenv("RUN_ID", "")),
+                self.run_context.get("pid", os.getpid()),
+                self.run_context.get("git_sha", os.getenv("GIT_SHA", "")),
+                self.run_context.get("started_at_ts_ms", ""),
+                ts_ms,
+                f.get("match_key", ""),
+                f.get("market_id", ""),
+                f.get("game_time"),
+                trigger,
+                trigger_strength,
+                side,
+                token_id,
+                f.get("nw_diff", 0.0),
+                mid,
+                fair,
+                edge,
+                edge_floor,
+                MAX_EDGE,
+                action,
+            ])
 
     def _reject(self, f: Dict[str, Any], reason: str, trigger: str = "", side: str = "",
                 trigger_strength: str = "", expected_move: Optional[float] = None,
                 fair: Optional[float] = None, edge: Optional[float] = None,
-                edge_floor: Optional[float] = None) -> None:
+                edge_floor: Optional[float] = None, token_id: Optional[str] = None) -> None:
         """Store a throttled rejection record for DB logging by the strategy loop."""
         match_key = str(f.get("match_key", ""))
         game_minute = int(float(f.get("game_time", 0.0)) // 60)
@@ -196,6 +228,7 @@ class SignalEngine:
             "trigger": normalize_trigger(trigger),
             "trigger_strength": str(trigger_strength or "").upper(),
             "side": side,
+            "token_id": token_id,
             "match_key": match_key,
             "game_time": float(f.get("game_time", 0.0)),
             "mid": float(f.get("mid", 0.0)),
@@ -388,6 +421,14 @@ class SignalEngine:
 
         # Executable edge calculation (Aggressive Maker Mode: Bid + 0.001)
         side = "RADIANT" if expected > 0 else "DIRE"
+        token_id = f.get("radiant_token_id" if expected > 0 else "dire_token_id", "")
+        if not self._valid_token_id(token_id):
+            self._reject(
+                f, "MISSING_TARGET_TOKEN_ID", trigger=trigger, side=side,
+                trigger_strength=trigger_strength, expected_move=expected, token_id=None,
+            )
+            return None
+
         raw_bid = float(f.get("radiant_best_bid" if expected > 0 else "dire_best_bid", 0.0))
         entry = max(raw_bid + 0.001, 0.01)
         fair = min(0.99, max(0.01, mid + expected if expected > 0 else (1.0 - mid) + abs(expected)))
@@ -397,25 +438,30 @@ class SignalEngine:
         # Global min edge is a hard floor; trigger floors can only make it stricter.
         edge_floor = max(self.min_edge, self.trigger_edge_floors.get(trigger, self.min_edge))
         
-        # Only log if this is a new minute/trigger/side for this match
-        shadow_key = (match_key, game_minute, trigger, side)
+        # Only log if this is a new minute/trigger/side/token for this match
+        shadow_key = (match_key, game_minute, trigger, side, str(token_id))
         if not hasattr(self, "_last_shadow_keys"):
             self._last_shadow_keys = set()
         
+        if edge < edge_floor:
+            shadow_action = "REJECT_EDGE_TOO_SMALL"
+        elif edge > MAX_EDGE:
+            shadow_action = "REJECT_EDGE_TOO_LARGE"
+        else:
+            shadow_action = "FIRE"
+
         if shadow_key not in self._last_shadow_keys:
-            token_id = f.get("radiant_token_id" if expected > 0 else "dire_token_id", "0x")
-            self._log_shadow(f.get("game_time"), trigger, trigger_strength, side, token_id, f.get("nw_diff", 0.0), 
-                             mid, fair, edge, "FIRE" if edge_floor <= edge <= MAX_EDGE else "REJECT_EDGE")
+            self._log_shadow(f, trigger, trigger_strength, side, token_id, mid, fair, edge, edge_floor, shadow_action)
             self._last_shadow_keys.add(shadow_key)
             # Cleanup old keys to prevent memory leak
             if len(self._last_shadow_keys) > 1000:
                 self._last_shadow_keys.clear()
 
         if edge < edge_floor:
-            self._reject(f, "EDGE_TOO_SMALL", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor)
+            self._reject(f, "EDGE_TOO_SMALL", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor, token_id=str(token_id))
             return None
         if edge > MAX_EDGE:
-            self._reject(f, "EDGE_TOO_LARGE", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor)
+            self._reject(f, "EDGE_TOO_LARGE", trigger=trigger, side=side, trigger_strength=trigger_strength, expected_move=expected, fair=fair, edge=edge, edge_floor=edge_floor, token_id=str(token_id))
             return None
 
         # Intra-minute Momentum Check:

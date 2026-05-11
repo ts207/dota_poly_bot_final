@@ -151,8 +151,10 @@ class FeatureEngine:
         f["nw_velocity"] = f["nw_change_10s"] / 10.0
         
         # Acceleration: Change in velocity (10s velocity vs previous 10s-20s velocity)
-        # We use d20 to get the state from 20s ago
-        d20 = self.dota.closest_ago(now_ms, 20)
+        # We use d20 to get the state from 20s ago. Dota-side windows must use
+        # game time, not wall-clock time, so pauses / Steam update cadence do not
+        # corrupt acceleration.
+        d20 = self.dota.closest_ago_game_time(game_time_now, 20, tolerance_s=10)
         if d10 and d20:
             prev_nw_10s = float(d10.get("nw_diff", 0.0)) - float(d20.get("nw_diff", 0.0))
             prev_velocity = prev_nw_10s / 10.0

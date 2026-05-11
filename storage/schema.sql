@@ -13,7 +13,11 @@ CREATE TABLE IF NOT EXISTS dota_ticks (
     dire_nw REAL,
     nw_diff REAL,
     total_nw REAL,
-    nw_diff_pct REAL
+    nw_diff_pct REAL,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_dota_ticks_ts ON dota_ticks(ts_ms);
@@ -29,7 +33,11 @@ CREATE TABLE IF NOT EXISTS market_ticks (
     mid REAL,
     spread REAL,
     bid_depth REAL,
-    ask_depth REAL
+    ask_depth REAL,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_market_ticks_ts ON market_ticks(ts_ms);
@@ -62,7 +70,14 @@ CREATE TABLE IF NOT EXISTS signals (
     market_lag REAL,
     edge REAL,
     combined_mid_disagreement REAL DEFAULT 0,
-    action TEXT
+    execution_price REAL,
+    execution_edge REAL,
+    execution_mode TEXT,
+    action TEXT,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_signals_ts ON signals(ts_ms);
@@ -80,7 +95,14 @@ CREATE TABLE IF NOT EXISTS orders (
     signal_id INTEGER,
     ack_ms INTEGER,
     fill_price REAL,
-    filled_size REAL
+    filled_size REAL,
+    exchange_order_id TEXT,
+    cancel_ack_ms INTEGER,
+    raw_response TEXT,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_ts ON orders(ts_ms);
@@ -106,7 +128,11 @@ CREATE TABLE IF NOT EXISTS paper_trades (
     pnl_15s REAL,
     pnl_30s REAL,
     pnl_60s REAL,
-    pnl_120s REAL
+    pnl_120s REAL,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_paper_trades_signal ON paper_trades(signal_id);
@@ -127,7 +153,11 @@ CREATE TABLE IF NOT EXISTS live_order_events (
     remaining_size REAL,
     ack_ms INTEGER,
     fill_ts_ms INTEGER,
-    raw_response TEXT
+    raw_response TEXT,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_live_order_events_order ON live_order_events(exchange_order_id, ts_ms);
@@ -146,11 +176,14 @@ CREATE TABLE IF NOT EXISTS live_fill_snapshots (
     mid REAL,
     spread REAL,
     bid_depth REAL,
-    ask_depth REAL
+    ask_depth REAL,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_live_fill_snapshots_order ON live_fill_snapshots(exchange_order_id, seconds_after_fill);
-
 
 CREATE TABLE IF NOT EXISTS signal_rejections (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -169,7 +202,11 @@ CREATE TABLE IF NOT EXISTS signal_rejections (
     expected_move REAL,
     fair_price REAL,
     edge REAL,
-    edge_floor REAL
+    edge_floor REAL,
+    run_id TEXT,
+    pid INTEGER,
+    git_sha TEXT,
+    started_at_ts_ms INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_signal_rejections_reason ON signal_rejections(reason, trigger, ts_ms);

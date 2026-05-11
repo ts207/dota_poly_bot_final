@@ -1,8 +1,10 @@
 # main.py
 import asyncio
 import os
+import subprocess
 import time
 import traceback
+import uuid
 from typing import Optional, Tuple
 
 from dotenv import load_dotenv
@@ -64,6 +66,64 @@ def env_trigger_windows(name: str, default: str = "") -> dict[str, tuple[float, 
 def is_placeholder(value: str) -> bool:
     v = str(value or "").strip().lower()
     return not v or "your_" in v or "polymarket_" in v or v in {"todo", "none", "null", "0"}
+
+
+def is_valid_token_id(value: str) -> bool:
+    v = str(value or "").strip().lower()
+    return bool(v) and v not in {"0", "0x", "none", "null", "todo"} and "your_" not in v
+
+
+def current_git_sha() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except Exception:
+        return os.getenv("GIT_SHA", "unknown")
+
+
+def build_run_context() -> dict[str, object]:
+    started_at_ts_ms = int(time.time() * 1000)
+    return {
+        "run_id": os.getenv("RUN_ID", f"run-{started_at_ts_ms}-{uuid.uuid4().hex[:8]}"),
+        "pid": os.getpid(),
+        "git_sha": current_git_sha(),
+        "started_at_ts_ms": started_at_ts_ms,
+    }
+
+
+def token_for_rejection(rejection: Optional[dict], radiant_token_id: str, dire_token_id: str) -> Optional[str]:
+    if not rejection:
+        return None
+    explicit = str(rejection.get("token_id") or "").strip()
+    if is_valid_token_id(explicit):
+        return explicit
+    side = str(rejection.get("side") or "").upper()
+    if "RADIANT" in side:
+        return radiant_token_id if is_valid_token_id(radiant_token_id) else None
+    if "DIRE" in side:
+        return dire_token_id if is_valid_token_id(dire_token_id) else None
+    return None
+
+
+def log_startup_config(logger: BotLogger, run_context: dict[str, object], db_path: str) -> None:
+    keys = [
+        "ENABLE_LIVE_TRADING", "LIVE_PROBE_ONLY", "AUTO_DISCOVER_POLYMARKET",
+        "ALLOW_LIVE_AUTO_DISCOVERY", "ALLOW_LIVE_ANY_DISCOVERED_MATCH",
+        "TARGET_SERVER_STEAM_ID", "TARGET_RADIANT_TEAM", "TARGET_DIRE_TEAM",
+        "TARGET_MATCH", "ENABLED_TRIGGERS", "BLOCKED_TRIGGERS",
+        "TRIGGER_MINUTE_WINDOWS", "DATABASE_PATH",
+    ]
+    logger.info(
+        "Run context: "
+        f"run_id={run_context.get('run_id')} pid={run_context.get('pid')} "
+        f"git_sha={run_context.get('git_sha')} started_at_ts_ms={run_context.get('started_at_ts_ms')}"
+    )
+    logger.info(f"Database path: {db_path}")
+    for key in keys:
+        logger.info(f"CONFIG {key}={os.getenv(key, '')}")
 
 
 def write_discovered_target_env(
@@ -252,6 +312,11 @@ async def strategy_loop(
         window_desc = ", ".join(f"{k}:{v[0]:g}-{v[1]:g}m" for k, v in sorted(trigger_windows.items()))
         logger.info(f"Trigger minute windows: {window_desc}")
 
+    # Local cache for market tick logging. strategy_loop is not a class method,
+    # so this must not be stored on `self`. Include market_id in the key so map
+    # transitions do not suppress fresh ticks for newly discovered markets.
+    last_logged_m_ts: dict[tuple[str, str], int] = {}
+
     while True:
         try:
             # Sync supervisor state
@@ -271,6 +336,14 @@ async def strategy_loop(
             market_id = supervisor.market_id
             radiant_token_id = supervisor.radiant_token_id
             dire_token_id = supervisor.dire_token_id
+
+            if not (is_valid_token_id(radiant_token_id) and is_valid_token_id(dire_token_id)):
+                logger.info(
+                    "Strategy: Waiting for valid token mapping "
+                    f"radiant_token_id={radiant_token_id!r} dire_token_id={dire_token_id!r}"
+                )
+                await asyncio.sleep(2.0)
+                continue
             
             # Ensure PolyMarketBook is tracking current tokens
             await poly_book.update_assets([radiant_token_id, dire_token_id])
@@ -294,16 +367,14 @@ async def strategy_loop(
 
             combined_book = combine_binary_books(radiant_book, dire_book)
 
-            # Only log market ticks if they are new to avoid DB congestion
-            if not hasattr(self, "_last_logged_m_ts"):
-                self._last_logged_m_ts = {}
-            
+            # Only log market ticks when the timestamp advances for this market/token.
             for tid, book in [(radiant_token_id, radiant_book), (dire_token_id, dire_book), ("COMBINED_RADIANT", combined_book)]:
-                last_ts = self._last_logged_m_ts.get(tid, 0)
-                curr_ts = book.get("ts_ms", 0)
+                key = (market_id, str(tid))
+                last_ts = last_logged_m_ts.get(key, 0)
+                curr_ts = int(book.get("ts_ms", 0) or 0)
                 if curr_ts > last_ts:
                     db.log_market_tick(market_id, tid, book)
-                    self._last_logged_m_ts[tid] = curr_ts
+                    last_logged_m_ts[key] = curr_ts
 
             features.add_market(combined_book)
             f = features.compute(dota_tick, combined_book)
@@ -313,7 +384,8 @@ async def strategy_loop(
                 await asyncio.sleep(1.0)
                 continue
 
-            # Inject token IDs for auditing
+            # Inject mapping context for auditing/cleaning
+            f["market_id"] = market_id
             f["radiant_token_id"] = radiant_token_id
             f["dire_token_id"] = dire_token_id
 
@@ -328,11 +400,39 @@ async def strategy_loop(
             if not signal:
                 rejection = getattr(signal_engine, "last_rejection", None)
                 if rejection and rejection.get("should_log") and env_bool("LOG_SIGNAL_REJECTIONS", True):
-                    db.log_signal_rejection(rejection=rejection, market_id=market_id)
+                    db.log_signal_rejection(
+                        rejection=rejection,
+                        market_id=market_id,
+                        token_id=token_for_rejection(rejection, radiant_token_id, dire_token_id),
+                    )
 
             if signal:
                 target_token_id = radiant_token_id if signal["side"] == "BUY_RADIANT_YES" else dire_token_id
                 target_book = radiant_book if target_token_id == radiant_token_id else dire_book
+
+                if not is_valid_token_id(target_token_id):
+                    logger.info("Execution blocked: MISSING_TARGET_TOKEN_ID")
+                    if env_bool("LOG_SIGNAL_REJECTIONS", True):
+                        db.log_signal_rejection(
+                            rejection={
+                                "match_key": f.get("match_key"),
+                                "trigger": signal.get("trigger"),
+                                "trigger_strength": signal.get("trigger_strength"),
+                                "side": signal.get("side"),
+                                "reason": "MISSING_TARGET_TOKEN_ID",
+                                "game_time": f.get("game_time"),
+                                "mid": f.get("mid"),
+                                "spread": target_book.get("spread") if target_book else None,
+                                "combined_mid_disagreement": f.get("combined_mid_disagreement"),
+                                "expected_move": signal.get("expected_move"),
+                                "fair_price": signal.get("fair_price"),
+                                "edge": signal.get("edge"),
+                                "edge_floor": None,
+                            },
+                            market_id=market_id,
+                            token_id=None,
+                        )
+                    continue
 
                 current_exposure = orders.get_open_exposure()
                 allowed, reason = risk.allow_trade(dota_tick, combined_book, target_book, current_exposure)
@@ -476,6 +576,9 @@ async def strategy_loop(
                         if env_bool("ENABLE_LIVE_TRADING", False):
                             size = min(size, float(os.getenv("LIVE_MAX_ORDER_SIZE", "1.00")))
 
+                        signal["execution_price"] = price
+                        signal["execution_edge"] = exec_edge
+                        signal["execution_mode"] = mode
                         signal_id = db.log_signal(signal, f, dota_tick["match_key"], market_id, target_token_id=target_token_id)
                         result = await orders.buy_limit(target_token_id, price, size, signal, signal_id=signal_id)
                         cancel_after_s = float(os.getenv(
@@ -498,7 +601,11 @@ async def main():
         return
 
     logger = BotLogger()
-    db = BotDatabase(os.getenv("DATABASE_PATH", "dota_poly_bot/storage/bot_data.db"))
+    run_context = build_run_context()
+    os.environ.setdefault("RUN_ID", str(run_context["run_id"]))
+    db_path = os.getenv("DATABASE_PATH", "dota_poly_bot/storage/bot_data.db")
+    db = BotDatabase(db_path, run_context=run_context)
+    log_startup_config(logger, run_context, db_path)
 
     target_match = os.getenv("TARGET_MATCH", "").strip()
     target_radiant_team = os.getenv("TARGET_RADIANT_TEAM", "").strip()
@@ -544,7 +651,7 @@ async def main():
         validation_tolerance=float(os.getenv("PM_BOOK_VALIDATION_TOLERANCE", "0.01")),
     )
     features = FeatureEngine()
-    signals = SignalEngine()
+    signals = SignalEngine(run_context=run_context)
     risk = RiskEngine()
 
     enable_live = env_bool("ENABLE_LIVE_TRADING", False)

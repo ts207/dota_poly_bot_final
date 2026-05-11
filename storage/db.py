@@ -7,8 +7,9 @@ from typing import Dict, Any, Optional
 
 
 class BotDatabase:
-    def __init__(self, db_path: str = "dota_poly_bot/storage/bot_data.db"):
+    def __init__(self, db_path: str = "dota_poly_bot/storage/bot_data.db", run_context: Optional[Dict[str, Any]] = None):
         self.db_path = db_path
+        self.run_context = run_context or {}
         self._ensure_schema()
         self._ensure_columns()
         self._ensure_live_probe_tables()
@@ -16,6 +17,15 @@ class BotDatabase:
     def _get_conn(self):
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         return sqlite3.connect(self.db_path)
+
+    @property
+    def _run_cols(self) -> tuple[str, int, str, int]:
+        return (
+            str(self.run_context.get("run_id") or ""),
+            int(self.run_context.get("pid") or 0),
+            str(self.run_context.get("git_sha") or ""),
+            int(self.run_context.get("started_at_ts_ms") or 0),
+        )
 
     def _ensure_schema(self):
         schema_path = Path(__file__).with_name("schema.sql")
@@ -30,6 +40,16 @@ class BotDatabase:
                 "partner": "INTEGER",
                 "radiant_team": "TEXT",
                 "dire_team": "TEXT",
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
+            },
+            "market_ticks": {
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
             },
             "signals": {
                 "target_token_id": "TEXT",
@@ -44,11 +64,46 @@ class BotDatabase:
                 "trigger_window": "TEXT",
                 "market_state": "TEXT",
                 "fair_price": "REAL",
+                "execution_price": "REAL",
+                "execution_edge": "REAL",
+                "execution_mode": "TEXT",
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
             },
             "orders": {
                 "exchange_order_id": "TEXT",
                 "cancel_ack_ms": "INTEGER",
                 "raw_response": "TEXT",
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
+            },
+            "paper_trades": {
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
+            },
+            "live_order_events": {
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
+            },
+            "live_fill_snapshots": {
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
+            },
+            "signal_rejections": {
+                "run_id": "TEXT",
+                "pid": "INTEGER",
+                "git_sha": "TEXT",
+                "started_at_ts_ms": "INTEGER",
             },
         }
         with self._get_conn() as conn:
@@ -123,6 +178,18 @@ class BotDatabase:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_signal_rejections_reason ON signal_rejections(reason, trigger, ts_ms)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_signal_rejections_market ON signal_rejections(market_id, ts_ms)")
 
+            # Live/rejection tables may be created after _ensure_columns() runs.
+            for table in ("live_order_events", "live_fill_snapshots", "signal_rejections"):
+                existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+                for col, decl in {
+                    "run_id": "TEXT",
+                    "pid": "INTEGER",
+                    "git_sha": "TEXT",
+                    "started_at_ts_ms": "INTEGER",
+                }.items():
+                    if col not in existing:
+                        conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {decl}")
+
     @staticmethod
     def _json_dumps(value: Any) -> Optional[str]:
         if value is None:
@@ -138,25 +205,29 @@ class BotDatabase:
                 INSERT INTO dota_ticks (
                     ts_ms, match_key, server_steam_id, partner, radiant_team, dire_team,
                     game_time, radiant_score, dire_score, radiant_nw, dire_nw,
-                    nw_diff, total_nw, nw_diff_pct
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    nw_diff, total_nw, nw_diff_pct,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 tick["ts_ms"], tick.get("match_key"), tick.get("server_steam_id"), tick.get("partner"),
                 tick.get("radiant_team"), tick.get("dire_team"), tick.get("game_time"),
                 tick.get("radiant_score"), tick.get("dire_score"), tick.get("radiant_nw"), tick.get("dire_nw"),
-                tick.get("nw_diff"), tick.get("total_nw"), tick.get("nw_diff_pct")
+                tick.get("nw_diff"), tick.get("total_nw"), tick.get("nw_diff_pct"),
+                *self._run_cols,
             ))
 
     def log_market_tick(self, market_id: str, token_id: str, book: Dict[str, Any]):
         with self._get_conn() as conn:
             conn.execute("""
                 INSERT INTO market_ticks (
-                    ts_ms, market_id, token_id, best_bid, best_ask, mid, spread, bid_depth, ask_depth
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ts_ms, market_id, token_id, best_bid, best_ask, mid, spread, bid_depth, ask_depth,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 book["ts_ms"], market_id, token_id,
                 book.get("best_bid"), book.get("best_ask"), book.get("mid"),
-                book.get("spread"), book.get("bid_depth"), book.get("ask_depth")
+                book.get("spread"), book.get("bid_depth"), book.get("ask_depth"),
+                *self._run_cols,
             ))
 
     def log_signal(
@@ -174,8 +245,10 @@ class BotDatabase:
                     nw_change_10s, nw_change_30s, nw_change_60s,
                     score_change_10s, score_change_30s, score_change_60s,
                     market_change_10s, market_change_30s, market_change_60s,
-                    expected_move, market_lag, edge, combined_mid_disagreement, action
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    expected_move, market_lag, edge, combined_mid_disagreement,
+                    execution_price, execution_edge, execution_mode, action,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 int(time.time() * 1000), match_key, market_id, target_token_id, signal["side"],
                 signal["signal_type"], signal.get("trigger"), signal.get("trigger_strength"), signal.get("trigger_window"), signal.get("market_state"), signal.get("fair_price"), f.get("game_time", 0),
@@ -183,7 +256,9 @@ class BotDatabase:
                 f.get("score_change_10s", 0), f.get("score_change_30s", 0), f.get("score_change_60s", 0),
                 f.get("market_change_10s", 0), f.get("market_change_30s", 0), f.get("market_change_60s", 0),
                 signal.get("expected_move", 0), signal.get("market_lag", 0), signal.get("edge", 0),
-                f.get("combined_mid_disagreement", 0), "SIGNAL"
+                f.get("combined_mid_disagreement", 0), signal.get("execution_price"), signal.get("execution_edge"),
+                signal.get("execution_mode"), "SIGNAL",
+                *self._run_cols,
             ))
             return int(cur.lastrowid)
 
@@ -200,8 +275,9 @@ class BotDatabase:
                 INSERT INTO signal_rejections (
                     ts_ms, match_key, market_id, token_id, trigger, trigger_strength, side, reason,
                     game_time, mid, spread, combined_mid_disagreement,
-                    expected_move, fair_price, edge, edge_floor
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    expected_move, fair_price, edge, edge_floor,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 int(time.time() * 1000),
                 rejection.get("match_key"),
@@ -219,6 +295,7 @@ class BotDatabase:
                 rejection.get("fair_price"),
                 rejection.get("edge"),
                 rejection.get("edge_floor"),
+                *self._run_cols,
             ))
             return int(cur.lastrowid)
 
@@ -243,12 +320,14 @@ class BotDatabase:
                 INSERT INTO orders (
                     ts_ms, market_id, token_id, side, price, size, status,
                     signal_id, ack_ms, fill_price, filled_size,
-                    exchange_order_id, cancel_ack_ms, raw_response
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    exchange_order_id, cancel_ack_ms, raw_response,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 int(time.time() * 1000), market_id, token_id, side, price, size, status,
                 signal_id, ack_ms, fill_price, filled_size,
-                exchange_order_id, cancel_ack_ms, self._json_dumps(raw_response)
+                exchange_order_id, cancel_ack_ms, self._json_dumps(raw_response),
+                *self._run_cols,
             ))
             return int(cur.lastrowid)
 
@@ -274,12 +353,14 @@ class BotDatabase:
                 INSERT INTO live_order_events (
                     ts_ms, signal_id, market_id, token_id, exchange_order_id, event_type,
                     intended_price, intended_size, filled_size, avg_fill_price,
-                    remaining_size, ack_ms, fill_ts_ms, raw_response
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    remaining_size, ack_ms, fill_ts_ms, raw_response,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 int(time.time() * 1000), signal_id, market_id, token_id, exchange_order_id, event_type,
                 intended_price, intended_size, filled_size, avg_fill_price,
-                remaining_size, ack_ms, fill_ts_ms, self._json_dumps(raw_response)
+                remaining_size, ack_ms, fill_ts_ms, self._json_dumps(raw_response),
+                *self._run_cols,
             ))
             return int(cur.lastrowid)
 
@@ -297,11 +378,13 @@ class BotDatabase:
             cur = conn.execute("""
                 INSERT INTO live_fill_snapshots (
                     ts_ms, exchange_order_id, signal_id, market_id, token_id,
-                    seconds_after_fill, best_bid, best_ask, mid, spread, bid_depth, ask_depth
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    seconds_after_fill, best_bid, best_ask, mid, spread, bid_depth, ask_depth,
+                    run_id, pid, git_sha, started_at_ts_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 int(time.time() * 1000), exchange_order_id, signal_id, market_id, token_id,
                 seconds_after_fill, book.get("best_bid"), book.get("best_ask"), book.get("mid"),
-                book.get("spread"), book.get("bid_depth"), book.get("ask_depth")
+                book.get("spread"), book.get("bid_depth"), book.get("ask_depth"),
+                *self._run_cols,
             ))
             return int(cur.lastrowid)
